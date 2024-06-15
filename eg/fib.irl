@@ -1,0 +1,19 @@
+function fib, 1
+    arg n
+    a = 0
+    b = 1
+    i = 1
+    label begin
+        if (i == n) goto end
+        t = b
+        b = a + b
+        a = t
+        i = i + 1
+		goto begin
+    label end
+    	ret b
+
+function main
+    param 3
+    a = call fib, 1
+    ret a
