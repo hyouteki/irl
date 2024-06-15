@@ -32,12 +32,14 @@ PARAM IDEN EOL
 IDEN EQUAL CALL IDEN COMMA NUM EOL
 RET IDEN* EOL EOF
 ```
-| **Category** | **Symbols**                  |
-|--------------|------------------------------|
-| **IDEN\***   | IDEN \| NUM                  |
-| **ARITH**    | + \| - \| * \| /             |
-| **UNARY**    | -                            |
-| **RELOP**    | == \| != \| <= \| < \| > \| >= |
+| **Category** | **Symbols**                    |
+|--------------|--------------------------------|
+| NUM          | (0-9)+                         |
+| IDEN         | (a-zA-Z)(a-zA-Z0-9)*           |
+| IDEN\*       | IDEN \| NUM                    |
+| ARITH        | + \| - \| * \| /               |
+| UNARY        | -                              |
+| RELOP        | == \| != \| <= \| < \| > \| >= |
 
 ### Quick Start
 ``` bash
