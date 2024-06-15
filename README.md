@@ -32,12 +32,15 @@ PARAM IDEN EOL
 IDEN EQUAL CALL IDEN COMMA NUM EOL
 RET IDEN* EOL EOF
 ```
-- IDEN*: IDEN | NUM 
-- ARITH: + | - | * | /
-- UNARY: - 
-- RELOP: == | != | <= | < | > | >=
+| **Category** | **Symbols**                  |
+|--------------|------------------------------|
+| **IDEN\***   | IDEN \| NUM                  |
+| **ARITH**    | + \| - \| * \| /             |
+| **UNARY**    | -                            |
+| **RELOP**    | == \| != \| <= \| < \| > \| >= |
 
 ### Quick Start
 ``` bash
-
+chmod +x build.sh
+./build.sh
 ```
