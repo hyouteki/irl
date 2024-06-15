@@ -91,12 +91,39 @@ static std::unique_ptr<AstNode> ParseIf(const std::vector<Token> tokens, size_t 
 	i++; // eat ')'
 	tokens[i].AssertTokenType(Token::Type::Goto);
 	i++; // eat 'goto'
+	tokens[i].AssertTokenType(Token::Type::Iden);
 	std::unique_ptr<AstNode> name = std::make_unique<IdenAstNode>(tokens[i].content);
 	i++; // eat 'iden'
 	std::unique_ptr<AstNode> gotoNode = std::make_unique<GotoAstNode>(std::move(name));
 	tokens[i].AssertTokenType(Token::Type::Eol);
 	i++; // eat 'EOL'
 	return std::make_unique<IfAstNode>(std::move(op), std::move(gotoNode));
+}
+
+static std::unique_ptr<AstNode> ParseFunction(const std::vector<Token> tokens, size_t &i) {
+	i++; // eat 'function'
+	tokens[i].AssertTokenType(Token::Type::Iden);
+	std::unique_ptr<AstNode> name = std::make_unique<IdenAstNode>(tokens[i].content);
+	i++; // eat 'iden'
+	tokens[i].AssertTokenType(Token::Type::Comma);
+	i++; // eat ','
+	tokens[i].AssertTokenType(Token::Type::Num);
+	size_t argCount = (size_t)std::stoi(tokens[i].content);
+	i++; // eat 'num'
+	tokens[i].AssertTokenType(Token::Type::Eol);
+	i++; // eat 'EOL'
+	std::vector<std::unique_ptr<AstNode>> args;
+	for (size_t j = 0; j < argCount; ++j) {
+		tokens[i].AssertTokenType(Token::Type::Arg);
+		i++; // eat 'arg'
+		tokens[i].AssertTokenType(Token::Type::Iden);
+		args.push_back(std::make_unique<IdenAstNode>(tokens[i].content));
+		i++; // eat 'iden'
+		tokens[i].AssertTokenType(Token::Type::Eol);
+		i++; // eat 'EOL'
+	}
+	std::vector<std::unique_ptr<AstNode>> body = BuildAstPrec(tokens, i, Prec_Function);
+	return std::make_unique<FunctionAstNode>(std::move(name), std::move(args), std::move(body));
 }
 
 static std::unique_ptr<AstNode> ParseLabel(const std::vector<Token> tokens, size_t &i) {
@@ -133,6 +160,9 @@ static std::vector<std::unique_ptr<AstNode>> BuildAstPrec(const std::vector<Toke
 	std::vector<std::unique_ptr<AstNode>> astNodes;
 	while (tokens[i].type != Token::Type::Eof && InstructionPrecedence(tokens[i]) < prec) {
 		switch (tokens[i].type) {
+		case Token::Type::Function:
+			astNodes.push_back(ParseFunction(tokens, i));
+			break;
 		case Token::Type::Iden:
 			astNodes.push_back(ParseIden(tokens, i));
 			break;

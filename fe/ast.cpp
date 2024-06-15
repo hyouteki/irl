@@ -4,7 +4,6 @@ void AstNode::PrintIndent(std::ostream &os, size_t indent) const {
 	for (size_t i = 0; i < indent; ++i) os << "    ";
 }
 
-
 std::ostream& operator<<(std::ostream &os, const AstNode &node) {
 	node.Print(os, 0);
 	return os;
@@ -44,11 +43,11 @@ void FunctionAstNode::Print(std::ostream &os, size_t indent) const {
 	this->PrintIndent(os, indent);
 	os << "function " << *this->name << ", " << this->args.size() << std::endl;
 	for (const auto &arg: this->args) {
+		this->PrintIndent(os, indent+1);
 		os << "arg " << *arg << std::endl;
 	}
 	for (const auto &inst: this->body) {
 		inst->Print(os, indent+1);
-		os << std::endl;
 	}
 }
 
