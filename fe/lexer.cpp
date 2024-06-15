@@ -107,9 +107,17 @@ void Token::ErrorTypeMismatch(const std::vector<Token::Type> types) const {
 	exit(1);
 } 
 
-void Token::AssertTokenType(const Type type) const {
+void Token::AssertTokenType(const Token::Type type) const {
 	if (this->type == type) return;
 	this->ErrorTypeMismatch({type});
+}
+
+
+void Token::AssertTokenTypes(const std::vector<Token::Type> types) const {
+	for (Token::Type type: types) {
+		if (this->type == type) return;
+	}
+	this->ErrorTypeMismatch(types);
 }
 
 bool Token::IsArith() const {

@@ -2,6 +2,7 @@ a = 0
 b = 1
 i = 1
 label begin
+	if (i == n) goto end
     t = b
     b = a + b
     a = t

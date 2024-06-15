@@ -51,6 +51,7 @@ public:
 	std::string TypeToString() const;	
 	void ErrorTypeMismatch(const std::vector<Type> types) const;
 	void AssertTokenType(const Type type) const;
+	void AssertTokenTypes(const std::vector<Type> types) const;
 	bool IsArith() const;
 	bool IsUnary() const;
 	bool IsRelop() const;
@@ -64,6 +65,9 @@ public:
 private:
 	std::vector<std::string> content;
 } Lexer;
+
+#define Token_Type_Relop { Token::Type::Eq, Token::Type::Neq, Token::Type::Gt, \
+			Token::Type::Lt, Token::Type::Ge, Token::Type::Le}
 
 #define Token_Type_ArithRelop { Token::Type::Plus,				\
 			Token::Type::Minus, Token::Type::Mul,				\

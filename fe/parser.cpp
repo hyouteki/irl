@@ -75,6 +75,30 @@ static std::unique_ptr<AstNode> ParseIden(const std::vector<Token> tokens, size_
 	return std::make_unique<AssignmentAstNode>(std::move(id), std::move(op));
 }
 
+static std::unique_ptr<AstNode> ParseIf(const std::vector<Token> tokens, size_t &i) {
+	i++; // eat 'if'
+	tokens[i].AssertTokenType(Token::Type::LParen);
+	i++; // eat '('
+	std::unique_ptr<AstNode> op1 = GetOperand(tokens[i]);
+	i++; // eat 'op'
+	tokens[i].AssertTokenTypes(Token_Type_Relop);
+	std::string relop = tokens[i].content;
+	i++; // eat 'relop'
+	std::unique_ptr<AstNode> op2 = GetOperand(tokens[i]);
+	std::unique_ptr<AstNode> op = std::make_unique<RelopAstNode>(relop, std::move(op1), std::move(op2));
+	i++; // eat 'op'
+	tokens[i].AssertTokenType(Token::Type::RParen);
+	i++; // eat ')'
+	tokens[i].AssertTokenType(Token::Type::Goto);
+	i++; // eat 'goto'
+	std::unique_ptr<AstNode> name = std::make_unique<IdenAstNode>(tokens[i].content);
+	i++; // eat 'iden'
+	std::unique_ptr<AstNode> gotoNode = std::make_unique<GotoAstNode>(std::move(name));
+	tokens[i].AssertTokenType(Token::Type::Eol);
+	i++; // eat 'EOL'
+	return std::make_unique<IfAstNode>(std::move(op), std::move(gotoNode));
+}
+
 static std::unique_ptr<AstNode> ParseLabel(const std::vector<Token> tokens, size_t &i) {
 	i++; // eat 'label'
 	tokens[i].AssertTokenType(Token::Type::Iden);
@@ -121,10 +145,13 @@ static std::vector<std::unique_ptr<AstNode>> BuildAstPrec(const std::vector<Toke
 		case Token::Type::Ret:
 			astNodes.push_back(ParseRet(tokens, i));
 			break;
+		case Token::Type::If:
+			astNodes.push_back(ParseIf(tokens, i));
+			break;
 		default:
 			std::cerr << Func_Loc << std::endl;
 			tokens[i].ErrorTypeMismatch({Token::Type::Iden, Token::Type::Goto,
-					Token::Type::Label, Token::Type::Ret});
+					Token::Type::Label, Token::Type::Ret, Token::Type::If});
 		}
 	}
 	return astNodes;
