@@ -1,5 +1,5 @@
-#include "fe/lexer.hpp"
-#include "fe/parser.hpp"
+#include "fe/export.hpp"
+#include "validation/export.hpp"
 
 int main(int argc, char* argv[]) {
 	std::string filename = std::string(argv[1]);
