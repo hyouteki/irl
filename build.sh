@@ -3,7 +3,7 @@ CFLAGS=-Wall
 BUILD_NAME=irl
 BUILD_DIRS=("fe")
 CPP_FILES=""
-TEST_FILE=eg/iden.irl
+TEST_FILE=eg/fib.irl
 
 for dir in ${BUILD_DIRS[@]}; do
     for file in ${dir}/*.cpp; do
