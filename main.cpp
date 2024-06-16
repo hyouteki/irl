@@ -12,5 +12,6 @@ int main(int argc, char* argv[]) {
 	for (const auto &astNode: astNodes) {
 		std::cout << *astNode;
 	}
+	// auto _ = ValidationPass(astNodes);
 	return 0;
 }

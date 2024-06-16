@@ -11,7 +11,7 @@ for dir in ${BUILD_DIRS[@]}; do
     done
 done
 
-set -xe
+set -e
 
 $CC main.cpp $CPP_FILES -o $BUILD_NAME $CFLAGS
 ./$BUILD_NAME $TEST_FILE

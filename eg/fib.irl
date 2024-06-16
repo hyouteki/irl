@@ -6,7 +6,7 @@ function fib, 1
     label begin
         if (i == n) goto end
         t = b
-        b = a + b
+        b = k + b
         a = t
         i = i + 1
 		goto begin

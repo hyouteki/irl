@@ -9,7 +9,7 @@ public:
     void RunOnFunction(FunctionAstNode& function) const;
 };
 
-class AssignmentValidationPass: public ValidationPass<AssignmentValidationPass> {
+class IdentifierValidationPass: public ValidationPass<IdentifierValidationPass> {
 public:
     void RunOnFunction(FunctionAstNode& function) const;
 };
