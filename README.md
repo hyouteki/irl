@@ -43,6 +43,5 @@ RET IDEN* EOL EOF
 
 ### Quick Start
 ``` bash
-chmod +x build.sh
-./build.sh
+cargo run
 ```
