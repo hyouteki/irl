@@ -1,5 +1,5 @@
 use crate::fe::{lexer::Lexer, parser::Parser};
-use crate::mw::{pass::*, validate_iden_pass::ValidateIdenPass};
+use crate::mw::default_ast_pass_manager::*;
 
 pub mod fe;
 pub mod mw;
@@ -7,10 +7,9 @@ pub mod mw;
 fn main() {
 	let lexer = Lexer::new(String::from("./eg/fib.irl"));
 	let mut parser = Parser::new(lexer.tokens);
+	run_default_ast_pass_manager(&mut parser.nodes);
+
 	for node in parser.nodes.iter() {
 		println!("{}", node);
 	}
-	let mut ast_pass_manager: AstPassManager = AstPassManager::new();
-	ast_pass_manager.add(ValidateIdenPass{});
-	ast_pass_manager.run(&mut parser.nodes);
 }
