@@ -6,6 +6,7 @@ fn print_indent(f: &mut std::fmt::Formatter, indent_sz: usize) {
 	}
 }
 
+#[derive(Clone)]
 pub struct IdenAstNode {
 	pub name: String,
 	pub loc: Loc,
@@ -17,6 +18,7 @@ impl IdenAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct NumAstNode {
 	pub num: i32,
 	pub loc: Loc,
@@ -28,6 +30,7 @@ impl NumAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct CallAstNode {
 	pub id: String,
 	pub name: String,
@@ -46,6 +49,7 @@ impl CallAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub enum ArithOp {
 	Sum, Sub, Mul, Div,
 }
@@ -78,6 +82,7 @@ impl std::fmt::Display for ArithOp {
 	}
 }
 
+#[derive(Clone)]
 pub struct ArithAstNode {
 	pub op: ArithOp,
 	pub lhs: Box<AstNode>,
@@ -91,6 +96,7 @@ impl ArithAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub enum RelOp {
 	Eq, Neq, Gt, Lt, Ge, Le,
 }
@@ -127,6 +133,7 @@ impl std::fmt::Display for RelOp {
 	}
 }
 
+#[derive(Clone)]
 pub struct RelopAstNode {
 	pub op: RelOp,
 	pub lhs: Box<AstNode>,
@@ -140,6 +147,7 @@ impl RelopAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub enum UnaryOp {
 	Neg,
 }
@@ -164,6 +172,7 @@ impl std::fmt::Display for UnaryOp {
 	}
 }
 
+#[derive(Clone)]
 pub struct UnaryAstNode {
 	pub op: UnaryOp,
 	pub var: Box<AstNode>,
@@ -176,6 +185,7 @@ impl UnaryAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct FunctionAstNode {
 	pub name: String,
 	pub args: Vec<AstNode>,
@@ -198,6 +208,7 @@ impl FunctionAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct AssignmentAstNode {
 	pub name: String,
 	pub var: Box<AstNode>,
@@ -211,6 +222,7 @@ impl AssignmentAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct GotoAstNode {
 	pub name: String,
 	pub loc: Loc,
@@ -223,6 +235,7 @@ impl GotoAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct LabelAstNode {
 	pub name: String,
 	pub body: Vec<AstNode>,
@@ -240,6 +253,7 @@ impl LabelAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct IfAstNode {
 	pub condition: Box<AstNode>,
 	pub label: String,
@@ -253,6 +267,7 @@ impl IfAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub struct RetAstNode {
 	pub var: Box<AstNode>,
 	pub loc: Loc,
@@ -265,6 +280,7 @@ impl RetAstNode {
 	}
 }
 
+#[derive(Clone)]
 pub enum AstNode {
 	Iden(IdenAstNode),
 	Num(NumAstNode),
@@ -295,6 +311,14 @@ impl AstNode {
 			AstNode::Label(node) => node.print(f, indent_sz),
 			AstNode::If(node) => node.print(f, indent_sz),
 			AstNode::Ret(node) => node.print(f, indent_sz),
+		}
+	}
+	pub fn is_terminator(&self) -> bool {
+		match self {
+			AstNode::Goto(_) => true,
+			AstNode::Label(_) => true,
+			AstNode::If(_) => true,
+			_ => false,
 		}
 	}
 }
