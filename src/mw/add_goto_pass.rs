@@ -12,6 +12,7 @@ fn helper(nodes: &mut Vec<AstNode>, ix: usize) -> bool {
 	if ix == nodes.len()-1 {
 		return match nodes[ix] {
 			AstNode::Goto(_) => false,
+			AstNode::Ret(_) => false,
 			_ => true,
 		}
 	}

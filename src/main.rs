@@ -1,13 +1,13 @@
-use crate::fe::{lexer::Lexer, parser::Parser, ast::FunctionAstNode};
+use crate::fe::{lexer::Lexer, parser::Parser};
 use crate::mw::default_ast_pass_manager::*;
-use crate::opt::cfg::*;
+use crate::opt::{default_compiler_pass_manager::*, cfg::*};
 
 pub mod fe;
 pub mod mw;
 pub mod opt;
 
 fn main() {
-	let lexer = Lexer::new(String::from("./eg/fib.irl"));
+	let lexer = Lexer::new(String::from("./eg/test.irl"));
 	let mut parser = Parser::new(lexer.tokens);
 	run_default_ast_pass_manager(&mut parser.nodes);
 
@@ -15,8 +15,14 @@ fn main() {
 		println!("{}", node);
 	}
 
-	let cfg_table: Vec<(FunctionAstNode, ControlFlowGraph)> = cfg_table_from_program(&parser.nodes);
-	for (_, cfg) in cfg_table.iter() {
+	let mut cfg_table: Vec<ControlFlowGraph> = cfg_table_from_program(&parser.nodes);
+	for cfg in cfg_table.iter_mut() {
+		println!("Function: {}", cfg.function.name);
+		println!("{}", cfg);
+	}
+	run_default_compiler_pass_manager(&mut cfg_table);
+	for cfg in cfg_table.iter_mut() {
+		println!("Function: {}", cfg.function.name);
 		println!("{}", cfg);
 	}
 }
