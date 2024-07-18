@@ -1,4 +1,4 @@
-use crate::fe::{lexer::Lexer, parser::Parser};
+use crate::fe::{lexer::Lexer, parser::Parser, ast::FunctionAstNode};
 use crate::mw::default_ast_pass_manager::*;
 use crate::opt::cfg::*;
 
@@ -15,5 +15,8 @@ fn main() {
 		println!("{}", node);
 	}
 
-	let _ = cfg_table_from_program(&parser.nodes);
+	let cfg_table: Vec<(FunctionAstNode, ControlFlowGraph)> = cfg_table_from_program(&parser.nodes);
+	for (_, cfg) in cfg_table.iter() {
+		println!("{}", cfg);
+	}
 }
