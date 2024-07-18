@@ -25,4 +25,10 @@ fn main() {
 		println!("Function: {}", cfg.function.name);
 		println!("{}", cfg);
 	}
+
+	// println!("Uses:");
+	// let uses = cfg_table[0].get_uses(cfg_table[0].basic_blocks[1].borrow().insts[1].clone());
+	// for x in uses.iter() {
+	// 	print!("{}", x.borrow());
+	// }
 }

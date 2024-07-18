@@ -3,7 +3,7 @@ function fib, 1
     a = 0
     b = 1
     i = 1
-	goto hello
+	// goto hello
     label begin
         if (i == n) goto end
         t = b
@@ -11,8 +11,8 @@ function fib, 1
         a = t
         i = i + 1
 		goto begin
-	label hello
-		ret 3
+	// label hello
+	// 	ret 3
     label end
     	ret b
 

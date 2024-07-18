@@ -1,5 +1,5 @@
 use std::{rc::{Rc, Weak}, cell::{Ref, RefCell}};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use crate::fe::ast::*;
 
@@ -17,7 +17,7 @@ enum Jump {
 pub struct BasicBlock {
 	id: usize,
 	label: Option<String>,
-	insts: Vec<AstNode>,
+	pub insts: Vec<Rc<RefCell<AstNode>>>,
 	prevs: Vec<Weak<RefCell<BasicBlock>>>,
 	next: Option<Jump>,
 }
@@ -64,7 +64,7 @@ impl BasicBlock {
 		Self{id: id, label: None, insts: Vec::new(), prevs: Vec::new(), next: None}
 	}
 	fn add_inst(&mut self, node: AstNode) {
-		self.insts.push(node);
+		self.insts.push(Rc::new(RefCell::new(node)));
 	}
 	fn add_prev(&mut self, prev: Weak<RefCell<BasicBlock>>) {
 		self.prevs.push(prev);
@@ -100,7 +100,7 @@ impl BasicBlock {
 impl std::fmt::Display for BasicBlock {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		for inst in self.insts.iter() {
-			let _ = write!(f, "{}", inst);
+			let _ = write!(f, "{}", inst.borrow());
 		}
 		write!(f, "")
 	}
@@ -134,7 +134,32 @@ impl ControlFlowGraph {
 		for (ix, basic_block) in self.basic_blocks.iter().enumerate() {
 			basic_block.borrow_mut().id = ix;
 		}
-	} 
+	}
+	pub fn get_uses(&self, inst: Rc<RefCell<AstNode>>) -> Vec<Rc<RefCell<AstNode>>> {
+		let production: Option<String> = inst.borrow().production();
+		if let None = production {
+			return vec![];
+		}
+		let mut res: Vec<Rc<RefCell<AstNode>>> = Vec::new();
+		let mut vis: HashSet<BasicBlockRef> = HashSet::new();
+		get_uses_(BasicBlockRef(self.basic_blocks[self.entry].clone()), production.unwrap(), &mut vis, &mut res);
+		res
+	}
+}
+
+fn get_uses_(basic_block: BasicBlockRef, production: String,
+			 vis: &mut HashSet<BasicBlockRef>, res: &mut Vec<Rc<RefCell<AstNode>>>) {
+	vis.insert(basic_block.clone());
+	for inst in basic_block.borrow().insts.iter() {
+		if inst.borrow().dependencies().contains(&production) {
+			res.push(inst.clone());
+		}
+	}
+	for succ in basic_block.borrow().successors() {
+		if !vis.contains(&BasicBlockRef(succ.upgrade().unwrap())) {
+			get_uses_(BasicBlockRef(succ.upgrade().unwrap()), production.clone(), vis, res);
+		}
+	}
 }
 
 impl std::fmt::Display for ControlFlowGraph {

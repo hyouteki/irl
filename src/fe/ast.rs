@@ -321,6 +321,88 @@ impl AstNode {
 			_ => false,
 		}
 	}
+	pub fn dependencies(&self) -> Vec<String> {
+		match self {
+			AstNode::Iden(_) => vec![],
+			AstNode::Num(_) => vec![],
+			AstNode::Call(node) => {
+				let mut res: Vec<String> = Vec::new();
+				for param in node.params.iter() {
+					if let AstNode::Iden(iden) = param {
+						res.push(iden.name.clone());
+					}
+				}
+				res
+			},
+			AstNode::Arith(node) => {
+				let mut res: Vec<String> = Vec::new();
+				if let AstNode::Iden(ref iden) = *node.lhs {
+					res.push(iden.name.clone());
+				}
+				if let AstNode::Iden(ref iden) = *node.rhs {
+					res.push(iden.name.clone());
+				}
+				res
+			},
+			AstNode::Relop(node) => {
+				let mut res: Vec<String> = Vec::new();
+				if let AstNode::Iden(ref iden) = *node.lhs {
+					res.push(iden.name.clone());
+				}
+				if let AstNode::Iden(ref iden) = *node.rhs {
+					res.push(iden.name.clone());
+				}
+				res
+			},
+			AstNode::Unary(node) => {
+				let mut res: Vec<String> = Vec::new();
+				if let AstNode::Iden(ref iden) = *node.var {
+					res.push(iden.name.clone());
+				}
+				res
+			},
+			AstNode::Function(_) => vec![],
+			AstNode::Assignment(node) => {
+				let mut res: Vec<String> = Vec::new();
+				if let AstNode::Iden(ref iden) = *node.var {
+					res.push(iden.name.clone());
+				}
+				res
+			},
+			AstNode::Goto(_) => vec![],
+			AstNode::Label(_) => vec![],
+			AstNode::If(node) => {
+				let mut res: Vec<String> = Vec::new();
+				if let AstNode::Iden(ref iden) = *node.condition {
+					res.push(iden.name.clone());
+				}
+				res
+			},
+			AstNode::Ret(node) => {
+				let mut res: Vec<String> = Vec::new();
+				if let AstNode::Iden(ref iden) = *node.var {
+					res.push(iden.name.clone());
+				}
+				res
+			},
+		}
+	}
+	pub fn production(&self) -> Option<String> {
+		match self {
+			AstNode::Iden(_) => None,
+			AstNode::Num(_) => None,
+			AstNode::Call(node) => Some(node.id.clone()),
+			AstNode::Arith(_) => None,
+			AstNode::Relop(_) => None,
+			AstNode::Unary(_) => None,
+			AstNode::Function(_) => None,
+			AstNode::Assignment(node) => Some(node.name.clone()),
+			AstNode::Goto(_) => None,
+			AstNode::Label(_) => None,
+			AstNode::If(_) => None,
+			AstNode::Ret(_) => None,
+		}
+	}
 }
 
 impl std::fmt::Display for AstNode {
