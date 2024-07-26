@@ -1,13 +1,19 @@
 use crate::fe::{lexer::Lexer, parser::Parser};
 use crate::mw::default_ast_pass_manager::*;
 use crate::opt::{default_compiler_pass_manager::*, cfg::*};
+use crate::cli::cli;
 
 pub mod fe;
 pub mod mw;
 pub mod opt;
+pub mod cli;
 
 fn main() {
-	let lexer = Lexer::new(String::from("./eg/test.irl"));
+	let match_result = cli().get_matches();
+    let compile_args = match_result.subcommand_matches("compile");
+    let filepath: String = compile_args.unwrap().get_one::<String>("filepath").unwrap().to_string();
+	
+	let lexer = Lexer::new(filepath);
 	let mut parser = Parser::new(lexer.tokens);
 	run_default_ast_pass_manager(&mut parser.nodes);
 

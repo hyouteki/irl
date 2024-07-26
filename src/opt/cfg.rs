@@ -18,7 +18,7 @@ pub struct BasicBlock {
 	id: usize,
 	label: Option<String>,
 	pub insts: Vec<Rc<RefCell<AstNode>>>,
-	prevs: Vec<Weak<RefCell<BasicBlock>>>,
+	pub prevs: Vec<Weak<RefCell<BasicBlock>>>,
 	next: Option<Jump>,
 }
 
@@ -231,8 +231,8 @@ fn process_body(body: &Vec<AstNode>, mut cur_bb: Rc<RefCell<BasicBlock>>,
 					cfg.add_label_with_basic_block(goto.name.clone(), Rc::clone(&new_bb_t));
 					new_bb_t
 				};
-				cur_bb.borrow_mut().set_unconditional_jump(Rc::downgrade(&new_bb));
 				new_bb.borrow_mut().add_prev(Rc::downgrade(&cur_bb));
+				cur_bb.borrow_mut().set_unconditional_jump(Rc::downgrade(&new_bb));
 				if let Context::InsideLabel = context {
 					return;
 				} else {

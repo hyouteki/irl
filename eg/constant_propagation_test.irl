@@ -1,0 +1,17 @@
+function foo, 1
+	arg a
+	c = 3
+	y = 7
+	z = 3
+	if (a > 2) goto start
+	x = y+z
+	z = c*c
+	goto end
+	label start
+		c = c+c
+		x = y-z
+		// goto end
+	label end
+		a = c*c
+		ret a
+	

@@ -26,8 +26,11 @@ The corrected AST then proceeds to the optimization ([`opt`](./src/opt)) module,
 
 The optimized CFG is then passed to the translation (`trn`) module, which translates it into assembly code tailored to the target architecture.
 
-
 ### Quick Start
 ``` bash
-cargo run
+cargo run -- compile -f ./eg/test.irl
 ```
+
+### Examples
+- [Fibonacci](./eg/fib.irl)
+- [Constant Propagation Analysis test](./eg/constant_propagation_test.irl)

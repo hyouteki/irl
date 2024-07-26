@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::fe::{loc::Loc, token::{Token, TokenKind}};
 
 fn print_indent(f: &mut std::fmt::Formatter, indent_sz: usize) {	
@@ -280,6 +281,24 @@ impl RetAstNode {
 	}
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Value {
+	Constant(i32),
+	Undefined,
+	Nac
+}
+
+pub fn value_join(v1: Value, v2: Value) -> Value {
+	match (v1, v2) {
+		(Value::Constant(c1), Value::Constant(c2)) => if c1 == c2 {
+			Value::Constant(c1)} else {Value::Nac},
+		(Value::Constant(c1), Value::Undefined) => Value::Constant(c1),
+		(Value::Undefined, Value::Constant(c2)) => Value::Constant(c2),
+		(_, Value::Nac) | (Value::Nac, _) => Value::Nac,
+		_ => Value::Undefined
+	}
+}
+
 #[derive(Clone)]
 pub enum AstNode {
 	Iden(IdenAstNode),
@@ -402,6 +421,109 @@ impl AstNode {
 			AstNode::If(_) => None,
 			AstNode::Ret(_) => None,
 		}
+	}
+	pub fn evaluate(&self) -> Value {
+		match self {
+			AstNode::Iden(_) => Value::Nac,
+			AstNode::Num(c) => Value::Constant(c.num),
+			AstNode::Call(_) => Value::Nac,
+			AstNode::Arith(node) => {
+				if let (Value::Constant(c1), Value::Constant(c2)) = (node.lhs.evaluate(), node.rhs.evaluate()) {
+					match node.op {
+						ArithOp::Sum => Value::Constant(c1+c2),
+						ArithOp::Sub => Value::Constant(c1-c2),
+						ArithOp::Mul => Value::Constant(c1*c2),
+						ArithOp::Div => Value::Constant(c1/c2),
+					}
+				} else {Value::Nac}
+			},
+			AstNode::Relop(node) => {
+				if let (Value::Constant(c1), Value::Constant(c2)) = (node.lhs.evaluate(), node.rhs.evaluate()) {
+					match node.op {
+						RelOp::Eq => Value::Constant((c1 == c2) as i32),
+						RelOp::Neq => Value::Constant((c1 != c2) as i32),
+						RelOp::Le => Value::Constant((c1 < c2) as i32),
+						RelOp::Ge => Value::Constant((c1 > c2) as i32),
+						RelOp::Lt => Value::Constant((c1 <= c2) as i32),
+						RelOp::Gt => Value::Constant((c1 >= c2) as i32),
+					}
+				} else {Value::Nac}
+			},
+			AstNode::Unary(node) => {
+				if let Value::Constant(c) = node.var.evaluate() {
+					match node.op {
+						UnaryOp::Neg => Value::Constant(-c),
+					}
+				} else {Value::Nac}
+			},
+			AstNode::Function(_) => Value::Nac,
+			AstNode::Assignment(node) => node.var.evaluate(),
+			AstNode::Goto(_) => Value::Nac,
+			AstNode::Label(_) => Value::Nac,
+			AstNode::If(_) => Value::Nac,
+			AstNode::Ret(node) => node.var.evaluate(),
+		}
+	}
+	pub fn reduced_version(&self, state: &HashMap<String, Value>) -> AstNode {
+		match self {
+			AstNode::Iden(node) => if let Some(Value::Constant(c)) = state.get(&node.name) {
+				AstNode::Num(NumAstNode{num: *c, loc: node.loc.clone()})
+			} else {self.clone()},
+			AstNode::Num(_) => self.clone(),
+			AstNode::Call(_) => self.clone(),
+			AstNode::Arith(node) => {
+				let mut res = node.clone();
+				*res.lhs = res.lhs.reduced_version(state);
+				*res.rhs = res.rhs.reduced_version(state);
+				AstNode::Arith(*Box::new(res))
+			},
+			AstNode::Relop(node) => {
+				let mut res = node.clone();
+				*res.lhs = res.lhs.reduced_version(state);
+				*res.rhs = res.rhs.reduced_version(state);
+				AstNode::Relop(*Box::new(res))
+			},
+			AstNode::Unary(node) => {
+				let mut res = node.clone();
+				*res.var = res.var.reduced_version(state);
+				AstNode::Unary(*Box::new(res))
+			},
+			AstNode::Function(_) => self.clone(),
+			AstNode::Assignment(node) => {
+				let mut res = node.clone();
+				*res.var = res.var.reduced_version(state);
+				AstNode::Assignment(*Box::new(res))
+			},
+			AstNode::Goto(_) => self.clone(),
+			AstNode::Label(_) => self.clone(),
+			AstNode::If(_) => self.clone(),
+			AstNode::Ret(node) => {
+				let mut res = node.clone();
+				*res.var = res.var.reduced_version(state);
+				AstNode::Ret(*Box::new(res))
+			},
+		}
+	}
+	pub fn reduce(&mut self, state: &HashMap<String, Value>) {
+		*self = self.reduced_version(state);
+	}
+	pub fn update_evaluations(&mut self, state: &mut HashMap<String, Value>) {
+		match self {
+			AstNode::Iden(_) => {},
+			AstNode::Num(_) => {},
+			AstNode::Call(node) => {state.insert(node.id.clone(), Value::Nac);},
+			AstNode::Arith(_) => {},
+			AstNode::Relop(_) => {},
+			AstNode::Unary(_) => {},
+			AstNode::Function(_) => {},
+			AstNode::Assignment(node) => {
+				state.insert(node.name.clone(), node.var.reduced_version(&*state).evaluate());
+			},
+			AstNode::Goto(_) => {},
+			AstNode::Label(_) => {},
+			AstNode::If(_) => {},
+			AstNode::Ret(_) => {},
+		};
 	}
 }
 
