@@ -1,7 +1,7 @@
 ;;; irl-mode.el --- Major mode for editing IRL files -*- lexical-binding: t; -*-
 
 ;; Author: hyouteki
-;; URL: https://github.com/hyouteki/irl/editor_plugins/irl-mode.el
+;; URL: https://github.com/hyouteki/irl/blob/master/editor_plugins/irl-mode.el
 ;; Version: 0.1
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "24.3"))
