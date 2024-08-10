@@ -27,12 +27,33 @@ The corrected AST then proceeds to the optimization ([`opt`](./src/opt)) module,
 The optimized CFG is then passed to the translation (`trn`) module, which translates it into assembly code tailored to the target architecture.
 
 ### Getting Started
+``` asm
+function fib, 1
+    arg n
+    a = 0
+    b = 1
+    i = 1
+    label begin
+        if (i == n) goto end
+        t = b
+        b = a + b
+        a = t
+        i = i + 1
+        goto begin
+    label end
+        ret b
+
+function main, 0
+    param 3
+    a = call fib, 1
+    ret a
+```
 ``` bash
 cargo run -- compile -f ./eg/fib.irl --cfg
 ```
 > Generated control flow graph of this example
 > 
-> ![Control Flow Graph of example fib](./resources/fib-cfg.png)
+> ![Control Flow Graph of example fib](./eg/fib.irl.dot.svg)
 
 ### CLI Documentation
 ```md
