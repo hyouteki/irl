@@ -1,0 +1,33 @@
+digraph "eg/fib.irl.dot" {
+    subgraph cluster_fib {
+        label="fib";
+        graph [style=filled];
+        fib_ENTRY [label="ENTRY"];
+        fib_EXIT [label="EXIT"];
+        fib_ENTRY -> fib_BB0;
+        fib_BB0 [shape=record label="[0]\n"];
+        fib_BB0 -> fib_BB1;
+        fib_BB1 [shape=record label="[1]\na = 0\lb = 1\li = 1\l"];
+        fib_BB1 -> fib_BB2;
+        fib_BB2 [shape=record label="[2 - begin]\n"];
+        fib_BB2 -> fib_BB3;
+        fib_BB2 -> fib_BB4;
+        fib_BB3 [shape=record label="[3 - end]\nret b\l"];
+        fib_BB3 -> fib_EXIT;
+        fib_BB4 [shape=record label="[4]\nt = b\lb = a + b\la = t\li = i + 1\l"];
+        fib_BB4 -> fib_BB2;
+    }
+
+    subgraph cluster_main {
+        label="main";
+        graph [style=filled];
+        main_ENTRY [label="ENTRY"];
+        main_EXIT [label="EXIT"];
+        main_ENTRY -> main_BB0;
+        main_BB0 [shape=record label="[0]\n"];
+        main_BB0 -> main_BB1;
+        main_BB1 [shape=record label="[1]\nparam 3\la = call fib, 1\lret a\l"];
+        main_BB1 -> main_EXIT;
+    }
+
+}
