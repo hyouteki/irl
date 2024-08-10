@@ -1,6 +1,7 @@
 use std::{rc::{Rc, Weak}, cell::{Ref, RefCell}};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
+use std::{fs::File, io::Write};
 use crate::fe::ast::*;
 
 struct ConditionalJump {
@@ -87,13 +88,33 @@ impl BasicBlock {
 	}
 	pub fn name(&self) -> String {
 		format!("[{}{}]", self.id, match &self.label {
-			Some(name) => format!("||{}", name),
+			Some(name) => format!(" - {}", name),
 			None => String::from(""),
 		})
 	}
 	fn properties(&self) -> String {
 		format!("{} [#Predecessor={}] [#Successor={}]\n", self.name(),
 				self.prevs.len(), self.successors().len())
+	}
+	fn transpile_to_dot(&self, function_name: String) -> Vec<String> {
+		let mut lines: Vec<String> = Vec::new();
+		let mut bb_label: String = String::from("");
+		bb_label += &format!("{}\\n", self.name());
+		for inst in self.insts.iter() {
+			bb_label += &format!("{}\\l", inst.borrow()).to_string()
+				.replace("\n", "\\n").replace("\\n\\l", "\\l").replace("\\n", "\\l");
+		}
+		lines.push(format!("        {}_BB{} [shape=record label=\"{}\"];",
+						   function_name.clone(), self.id, bb_label));
+		for succ in self.successors().iter() {
+			lines.push(format!("        {}_BB{} -> {}_BB{};", function_name.clone(),
+							   self.id, function_name.clone(), succ.upgrade().unwrap().borrow().id));
+		}
+		if self.successors().len() == 0 {
+			lines.push(format!("        {}_BB{} -> {}_EXIT;", function_name.clone(),
+							   self.id, function_name.clone()));
+		}
+		lines
 	}
 }
 
@@ -145,6 +166,21 @@ impl ControlFlowGraph {
 		get_uses_(BasicBlockRef(self.basic_blocks[self.entry].clone()), production.unwrap(), &mut vis, &mut res);
 		res
 	}
+	fn transpile_to_dot(&self) -> Vec<String> {
+		let mut lines: Vec<String> = Vec::new();
+		lines.push(format!("    subgraph cluster_{} {{", self.function.name));
+		lines.push(format!("        label=\"{}\";", self.function.name));
+		lines.push(format!("        graph [style=filled];"));
+		lines.push(format!("        {}_ENTRY [label=\"ENTRY\"];", self.function.name));
+		lines.push(format!("        {}_EXIT [label=\"EXIT\"];", self.function.name));
+		lines.push(format!("        {}_ENTRY -> {}_BB{};", self.function.name, self.function.name,
+						   self.basic_blocks[self.entry].borrow().id));
+		for basic_block_ref in self.basic_blocks.iter() {
+			lines.append(&mut basic_block_ref.borrow().transpile_to_dot(self.function.name.clone()));
+		}
+		lines.push(String::from("    }"));
+		lines
+	}
 }
 
 fn get_uses_(basic_block: BasicBlockRef, production: String,
@@ -160,6 +196,19 @@ fn get_uses_(basic_block: BasicBlockRef, production: String,
 			get_uses_(BasicBlockRef(succ.upgrade().unwrap()), production.clone(), vis, res);
 		}
 	}
+}
+
+pub fn dump_cfg_table_to_svg(cfg_table: &Vec<ControlFlowGraph>, filepath: String) {
+	let mut file = File::create(filepath.clone()).expect("could not create a file");
+	let _  = file.write_all(format!("digraph \"{}\" {{\n", filepath.clone()).as_bytes());
+	for cfg in cfg_table.iter() {
+		for line in cfg.transpile_to_dot().iter() {
+			file.write_all(line.as_bytes()).expect("could not write line");
+			file.write_all(b"\n").expect("could not write new line");
+		}
+		file.write_all(b"\n").expect("could not write new line");
+	}
+	file.write_all(b"}\n").expect("could not write new line");
 }
 
 impl std::fmt::Display for ControlFlowGraph {
