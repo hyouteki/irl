@@ -30,16 +30,17 @@ The optimized CFG is then passed to the translation (`trn`) module, which transl
 ``` bash
 cargo run -- compile -f ./eg/fib.irl --cfg
 ```
-Generated control flow graph of this example
-![Control Flow Graph of example fib](./resources/fib-cfg.jpg)
+> Generated control flow graph of this example
+> 
+> ![Control Flow Graph of example fib](./resources/fib-cfg.png)
 
 ### CLI Documentation
 ```md
 Compile source code to target(s)
 
-**Usage**: irl.exe compile [OPTIONS] --filepath <filepath>
+Usage: irl.exe compile [OPTIONS] --filepath <filepath>
 
-**Options**:
+Options:
   -f, --filepath <filepath>  Source file path
       --cfg                  Output control flow graph of the program as a svg
   -d, --debug                Dumps debug info onto stdout
