@@ -213,8 +213,16 @@ impl ControlFlowGraph {
 	pub fn generate_ast(&self) -> AstNode {
 		let mut function_node: FunctionAstNode = self.function.clone();
 		function_node.body.clear();
-		for basic_block_ref in self.basic_blocks.iter() {
-			function_node.body.push(AstNode::Label(basic_block_ref.borrow().generate_label_ast_node()));
+		for (id, basic_block_ref) in self.basic_blocks.iter().enumerate() {
+			if id != self.entry {
+				function_node.body.push(AstNode::Label(basic_block_ref.borrow().generate_label_ast_node()));
+				continue;
+			}
+			if let Some(Jump::Unconditional(jump_node_ref)) = &basic_block_ref.borrow().next {
+				function_node.body.push(AstNode::Goto(GotoAstNode{
+					name: jump_node_ref.upgrade().unwrap().borrow().label(), loc: Loc::null()
+				}));
+			}			
 		}
 		return AstNode::Function(function_node);
 	}

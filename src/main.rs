@@ -60,15 +60,4 @@ fn main() {
 			println!("{}", node);
 		}
 	}
-	
-	// module: mw
-	run_default_ast_pass_manager(&mut ast);	
-	if options.debug {
-		println!("optimized AST");
-		println!("=============");
-		for node in ast.iter() {
-			println!("{}", node);
-			println!("");
-		}
-	}
 }
