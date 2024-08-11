@@ -13,6 +13,12 @@ pub struct IdenAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for IdenAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
 impl IdenAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		write!(f, "{}", self.name)
@@ -23,6 +29,12 @@ impl IdenAstNode {
 pub struct NumAstNode {
 	pub num: i32,
 	pub loc: Loc,
+}
+
+impl PartialEq for NumAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.num == other.num
+    }
 }
 
 impl NumAstNode {
@@ -39,6 +51,12 @@ pub struct CallAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for CallAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.params == other.params
+    }
+}
+
 impl CallAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter, indent_sz: usize) -> std::fmt::Result {
 		for param in self.params.iter() {
@@ -50,7 +68,7 @@ impl CallAstNode {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum ArithOp {
 	Sum, Sub, Mul, Div,
 }
@@ -91,13 +109,19 @@ pub struct ArithAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for ArithAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.lhs == other.lhs && self.op == other.op && self.rhs == other.rhs
+    }
+}
+
 impl ArithAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		write!(f, "{} {} {}", self.lhs, self.op, self.rhs)
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum RelOp {
 	Eq, Neq, Gt, Lt, Ge, Le,
 }
@@ -142,13 +166,19 @@ pub struct RelopAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for RelopAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.lhs == other.lhs && self.op == other.op && self.rhs == other.rhs
+    }
+}
+
 impl RelopAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		write!(f, "{} {} {}", self.lhs, self.op, self.rhs)
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum UnaryOp {
 	Neg,
 }
@@ -180,6 +210,12 @@ pub struct UnaryAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for UnaryAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.var == other.var && self.op == other.op
+    }
+}
+
 impl UnaryAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		write!(f, "{}{}", self.op, self.var)
@@ -192,6 +228,12 @@ pub struct FunctionAstNode {
 	pub args: Vec<AstNode>,
 	pub body: Vec<AstNode>,
 	pub loc: Loc,
+}
+
+impl PartialEq for FunctionAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.args == other.args && self.body == other.body
+    }
 }
 
 impl FunctionAstNode {
@@ -216,6 +258,12 @@ pub struct AssignmentAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for AssignmentAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.var == other.var
+    }
+}
+
 impl AssignmentAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter, indent_sz: usize) -> std::fmt::Result {
 		print_indent(f, indent_sz);
@@ -227,6 +275,12 @@ impl AssignmentAstNode {
 pub struct GotoAstNode {
 	pub name: String,
 	pub loc: Loc,
+}
+
+impl PartialEq for GotoAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
 }
 
 impl GotoAstNode {
@@ -241,6 +295,12 @@ pub struct LabelAstNode {
 	pub name: String,
 	pub body: Vec<AstNode>,
 	pub loc: Loc,
+}
+
+impl PartialEq for LabelAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.body == other.body
+    }
 }
 
 impl LabelAstNode {
@@ -261,6 +321,12 @@ pub struct IfAstNode {
 	pub loc: Loc,
 }
 
+impl PartialEq for IfAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.condition == other.condition && self.label == other.label
+    }
+}
+
 impl IfAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter, indent_sz: usize) -> std::fmt::Result {
 		print_indent(f, indent_sz);
@@ -272,6 +338,12 @@ impl IfAstNode {
 pub struct RetAstNode {
 	pub var: Box<AstNode>,
 	pub loc: Loc,
+}
+
+impl PartialEq for RetAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.var == other.var
+    }
 }
 
 impl RetAstNode {
@@ -299,7 +371,7 @@ pub fn value_join(v1: Value, v2: Value) -> Value {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum AstNode {
 	Iden(IdenAstNode),
 	Num(NumAstNode),
