@@ -15,6 +15,7 @@ impl Context {
 	}
 	fn validate_iden(&self, node: &IdenAstNode) {
 		if !self.idens.contains(&node.name) {
+			node.loc.message(String::from("validate_iden_pass: failed"));
 			node.loc.error(format!("unknown identifier '{}'", node.name));
 		}
 	}
@@ -23,11 +24,13 @@ impl Context {
 	}
 	fn validate_label(&self, label: &String, loc: Loc) {
 		if !self.labels.contains(label) {
+			loc.message(String::from("validate_iden_pass: failed"));
 			loc.error(format!("unknown label identifier '{}'", label));
 		}
 	}
 	fn insert_label(&mut self, label: &String, loc: Loc) {
 		if self.labels.contains(label) {
+			loc.message(String::from("validate_iden_pass: failed"));
 			loc.error(format!("label identifier already exists '{}'", label));
 		}
 		let _ = self.labels.insert(label.clone());
