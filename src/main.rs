@@ -28,20 +28,8 @@ fn main() {
 	}
 
 	let mut cfg_table: Vec<ControlFlowGraph> = cfg_table_from_program(&parser.nodes);
-	if debug {
-		for cfg in cfg_table.iter_mut() {
-			println!("Function: {}", cfg.function.name);
-			println!("{}", cfg);
-		}
-	}
 	
 	run_default_compiler_pass_manager(&mut cfg_table);
-	if debug {
-		for cfg in cfg_table.iter_mut() {
-			println!("Function: {}", cfg.function.name);
-			println!("{}", cfg);
-		}
-	}
 
 	if cfg {
 		let dot_filepath: String = format!("{}.dot", filepath.clone());
@@ -49,6 +37,14 @@ fn main() {
 		Command::new("dot").arg("-Tsvg").arg("-O").arg(dot_filepath.clone());
 		if verbose {
 			println!("info: created control flow graph svg '{}'", dot_filepath.clone());
+		}
+	}
+
+	if debug {
+		println!("converted AST");
+		for cfg in cfg_table.iter() {
+			println!("{}", cfg.generate_ast());
+			println!("");
 		}
 	}
 }

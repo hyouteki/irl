@@ -2,7 +2,7 @@ use std::{rc::{Rc, Weak}, cell::{Ref, RefCell}};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::{fs::File, io::Write};
-use crate::fe::ast::*;
+use crate::fe::{ast::*, loc::Loc};
 
 struct ConditionalJump {
 	condition: AstNode,
@@ -92,6 +92,12 @@ impl BasicBlock {
 			None => String::from(""),
 		})
 	}
+	pub fn label(&self) -> String {
+		match &self.label {
+			Some(name) => name.clone(),
+			None => format!("{}", self.id),
+		}
+	}
 	fn properties(&self) -> String {
 		format!("{} [#Predecessor={}] [#Successor={}]\n", self.name(),
 				self.prevs.len(), self.successors().len())
@@ -115,6 +121,29 @@ impl BasicBlock {
 							   self.id, function_name.clone()));
 		}
 		lines
+	}
+	fn generate_label_ast_node(&self) -> LabelAstNode {
+		let mut body: Vec<AstNode> = Vec::new();
+		for inst_ref in self.insts.iter() {
+			body.push(inst_ref.borrow().clone());
+		}
+		match &self.next {
+			Some(jump) => match jump {
+				Jump::Unconditional(basic_block_ref) => {
+					let name: String = basic_block_ref.upgrade().unwrap().borrow().label();
+					body.push(AstNode::Goto(GotoAstNode{name: name, loc: Loc::null()}));
+				},
+				Jump::Conditional(conditional_jump) => {
+					let goto_name: String = conditional_jump.goto.upgrade().unwrap().borrow().label();
+					let otherwise_name: String = conditional_jump.otherwise.upgrade().unwrap().borrow().label();
+					body.push(AstNode::If(IfAstNode{condition: Box::new(conditional_jump.condition.clone()),
+													label: goto_name, loc: Loc::null()}));
+					body.push(AstNode::Goto(GotoAstNode{name: otherwise_name, loc: Loc::null()}));
+				},
+			},
+			None => {},
+		}
+		LabelAstNode{name: self.label(), body: body, loc: Loc::null()}
 	}
 }
 
@@ -180,6 +209,14 @@ impl ControlFlowGraph {
 		}
 		lines.push(String::from("    }"));
 		lines
+	}
+	pub fn generate_ast(&self) -> AstNode {
+		let mut function_node: FunctionAstNode = self.function.clone();
+		function_node.body.clear();
+		for basic_block_ref in self.basic_blocks.iter() {
+			function_node.body.push(AstNode::Label(basic_block_ref.borrow().generate_label_ast_node()));
+		}
+		return AstNode::Function(function_node);
 	}
 }
 
