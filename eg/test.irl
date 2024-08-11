@@ -11,6 +11,8 @@ function fib, 1
         a = t
         i = i + 1
 		goto begin
+		d = 0
+		d = d + 1
 	// label hello
 	// 	ret 3
     label end

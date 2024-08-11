@@ -15,12 +15,13 @@ impl Loc {
 	pub fn new(row: usize, col: usize, filepath: String) -> Self {
 		Self{row, col, filepath}
 	}
-
 	pub fn error(&self, message: String) {
 		eprintln!("{}: error: {}", self, message);
 		std::process::exit(1);
 	}
-
+	pub fn message(&self, message: String) {
+		eprintln!("{}: {}", self, message);
+	}
 	pub fn null() -> Self {
 		Self{row: 0, col: 0, filepath: String::from("")}
 	}

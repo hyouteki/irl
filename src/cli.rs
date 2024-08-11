@@ -1,5 +1,28 @@
 use clap::{Arg, Command, ArgAction};
 
+pub struct CliOptions {
+	pub filepath: String,
+	pub cfg: bool,
+	pub debug: bool,
+	pub verbose: bool,
+}
+
+impl CliOptions {
+	pub fn new() -> Self {
+		let match_result = cli().get_matches();
+		let compile_args = match_result.subcommand_matches("compile");
+		Self {
+			filepath: compile_args.unwrap().get_one::<String>("filepath").unwrap().to_string(),
+			cfg: *compile_args.unwrap().get_one::<bool>("cfg").unwrap(),
+			debug: *compile_args.unwrap().get_one::<bool>("debug").unwrap(),
+			verbose: *compile_args.unwrap().get_one::<bool>("verbose").unwrap(),
+		}
+	}
+	pub fn verbose_message(&self, message: String) {
+		if self.verbose {println!("{}: info: {}", self.filepath, message);}
+	}
+}
+
 pub fn cli() -> Command {
     Command::new("irl")
         .about("Intermediate Representation Language: Minimal implementation of LLVM")
