@@ -20,4 +20,8 @@ impl Loc {
 		eprintln!("{}: error: {}", self, message);
 		std::process::exit(1);
 	}
+
+	pub fn null() -> Self {
+		Self{row: 0, col: 0, filepath: String::from("")}
+	}
 }
