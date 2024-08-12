@@ -1,0 +1,3 @@
+[submodule "editor_plugins/fasm-mode"]
+	path = editor_plugins/fasm-mode
+	url = https://github.com/emacsattic/fasm-mode/

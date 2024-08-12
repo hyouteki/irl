@@ -66,6 +66,9 @@ Options:
       --cfg                  Output control flow graph of the program as a svg
   -d, --debug                Dumps debug info onto stdout
   -v, --verbose              Sets info level to verbose
+      --wat                  Generates WAT (Web Assembly Text)
+      --wasm                 Generates WASM (Web Assembly)
+      --fasm                 Generates FASM (Flat Assembly)
   -h, --help                 Print help
 ```
 
@@ -75,3 +78,8 @@ Options:
 
 ### Dependencies
 - [graphviz - Graph Visualization Tools](https://graphviz.org/download/)
+- [flatassembler - tgrysztar](https://flatassembler.net/)
+- [wabt - webassembly](https://github.com/WebAssembly/wabt)
+
+### Cortesy
+- [fasm-mode - emacsattic](https://github.com/emacsattic/fasm-mode/)

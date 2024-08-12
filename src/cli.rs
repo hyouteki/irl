@@ -7,6 +7,7 @@ pub struct CliOptions {
 	pub verbose: bool,
 	pub wat: bool,
 	pub wasm: bool,
+	pub fasm: bool,
 }
 
 impl CliOptions {
@@ -20,6 +21,7 @@ impl CliOptions {
 			verbose: *compile_args.unwrap().get_one::<bool>("verbose").unwrap(),
 			wat: *compile_args.unwrap().get_one::<bool>("wat").unwrap(),
 			wasm: *compile_args.unwrap().get_one::<bool>("wasm").unwrap(),
+			fasm: *compile_args.unwrap().get_one::<bool>("fasm").unwrap(),
 		}
 	}
 	pub fn verbose_message(&self, message: String) {
@@ -85,11 +87,16 @@ pub fn cli() -> Command {
                      .long("wat")
                      .required(false)
                      .action(ArgAction::SetTrue)
-                     .help("Generates WAT"))
+                     .help("Generates WAT (Web Assembly Text)"))
 				.arg(Arg::new("wasm")
                      .long("wasm")
                      .required(false)
                      .action(ArgAction::SetTrue)
-                     .help("Generates WASM"))
+                     .help("Generates WASM (Web Assembly)"))
+				.arg(Arg::new("fasm")
+                     .long("fasm")
+                     .required(false)
+                     .action(ArgAction::SetTrue)
+                     .help("Generates FASM (Flat Assembly)"))
 		)
 }

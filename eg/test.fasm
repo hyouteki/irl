@@ -1,0 +1,14 @@
+format ELF64
+section '.text' executable
+function_fib:
+    goto label_1
+    label_1:
+        goto label_begin
+    label_begin:
+        goto label_4
+    label_end:
+    label_4:
+        goto label_begin
+function_main:
+    goto label_1
+    label_1:
