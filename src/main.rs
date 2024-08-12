@@ -1,12 +1,13 @@
 use crate::fe::{lexer::Lexer, parser::Parser, ast::AstNode};
 use crate::mw::default_ast_pass_manager::*;
 use crate::opt::{default_compiler_pass_manager::*, cfg::*};
+use crate::trn::transpiler::*;
 use crate::cli::CliOptions;
-use std::process::Command;
 
 pub mod fe;
 pub mod mw;
 pub mod opt;
+pub mod trn;
 pub mod cli;
 
 fn main() {
@@ -42,10 +43,10 @@ fn main() {
 	let mut cfg_table: Vec<ControlFlowGraph> = cfg_table_from_program(&ast);
 	run_default_compiler_pass_manager(&mut cfg_table);
 	if options.cfg {
-		let dot_filepath: String = format!("{}.dot", options.filepath.clone());
-		dump_cfg_table_to_svg(&cfg_table, dot_filepath.clone());
-		Command::new("dot").arg("-Tsvg").arg("-O").arg(dot_filepath.clone());
-		options.verbose_message(format!("created control flow graph svg '{}'", dot_filepath));
+		let dot_filepath: String = replace_extension(options.filepath.clone(), "irl", "dot");
+		dump_cfg_table_to_svg(&cfg_table, dot_filepath.to_string());
+		options.run_command(&["dot", "-Tsvg", "-O", dot_filepath.as_str()]);
+		options.verbose_error(format!("created control flow graph svg '{}.svg'", dot_filepath));
 	}
 	options.verbose_message(format!("OPT over"));
 	
@@ -60,4 +61,6 @@ fn main() {
 			println!("{}", node);
 		}
 	}
+
+	transpile(&options, &ast, options.filepath.clone());
 }

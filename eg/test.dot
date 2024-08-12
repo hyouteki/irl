@@ -1,4 +1,4 @@
-digraph "./eg/fib.irl.dot" {
+digraph "./eg/test.dot" {
     subgraph cluster_fib {
         label="fib";
         graph [style=filled];
