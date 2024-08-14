@@ -53,7 +53,7 @@ cargo run -- compile -f ./eg/fib.irl --cfg
 ```
 > Generated control flow graph of this example
 > 
-> ![Control Flow Graph of example fib](./eg/fib.irl.dot.svg)
+> ![Control Flow Graph of example fib](./eg/fib.dot.svg)
 
 ### CLI Documentation
 ```md
