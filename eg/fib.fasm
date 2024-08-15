@@ -10,8 +10,9 @@ fib:
   fib_label_begin:
     jmp fib_label_4
   fib_label_end:
-    mov rax, [rsp+12]
+    mov r14, [rsp+0]
     add rsp, 20
+    mov rax, r14
     ret
   fib_label_4:
     jmp fib_label_begin
@@ -19,10 +20,8 @@ main:
   sub rsp, 4
   jmp main_label_1
   main_label_1:
-    mov rdi, 3
-    call fib
-    mov [rsp+0], rax
-    mov rax, 60
-    mov rdi, [rsp+0]
+    mov r14, [rsp+0]
     add rsp, 4
+    mov rax, 60
+    mov rdi, r14
     syscall

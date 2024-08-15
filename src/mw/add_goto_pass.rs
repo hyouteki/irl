@@ -6,6 +6,7 @@ impl AstPass for AddGotoPass {
 	fn apply(&self, nodes: &mut Vec<AstNode>) {
 		let _ = helper(nodes, 0);
 	}
+	fn name(&self) -> String {String::from("add_goto_pass")}
 }
 
 fn helper(nodes: &mut Vec<AstNode>, ix: usize) -> bool {

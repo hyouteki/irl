@@ -94,7 +94,7 @@ pub fn cli() -> Command {
                      .action(ArgAction::SetTrue)
                      .help("Generates WASM (Web Assembly)"))
 				.arg(Arg::new("fasm")
-                     .long("fasm")
+                     .long("fasm-linux-x86_64")
                      .required(false)
                      .action(ArgAction::SetTrue)
                      .help("Generates FASM (Flat Assembly)"))

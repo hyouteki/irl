@@ -17,7 +17,7 @@ pub fn replace_extension(filepath: String, old_ext: &str, new_ext: &str) -> Stri
 
 pub fn indent(indent_sz: usize, text: String) -> String {
 	let mut line: String = String::new();
-	for _ in 0..indent_sz {line.push_str("    ");}
+	for _ in 0..indent_sz {line.push_str("  ");}
 	line.push_str(&text);
 	line
 }

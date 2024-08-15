@@ -19,6 +19,10 @@ impl Loc {
 		eprintln!("{}: error: {}", self, message);
 		std::process::exit(1);
 	}
+	pub fn program_error(&self, message: String) {
+		eprintln!("{}: error: {}", self.filepath, message);
+		std::process::exit(1);
+	}
 	pub fn message(&self, message: String) {
 		eprintln!("{}: {}", self, message);
 	}

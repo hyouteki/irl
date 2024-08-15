@@ -26,27 +26,34 @@ The corrected AST then proceeds to the optimization ([`opt`](./src/opt)) module,
 
 The optimized CFG is then passed to the translation (`trn`) module, which translates it into assembly code tailored to the target architecture.
 
+### Supported Targets
+| flag                   | Status         | Notes                            |
+|------------------------|----------------|----------------------------------|
+| `fasm-linux-x86_64`    | ✖️ In Progress | Future support under development |
+| `fasm-windows-x86_64`  | ✖️ Planned     | Future support under development |
+| `wasm`                 | ✖️ Planned     | Future support under development |
+
 ### Getting Started
 ``` asm
 function fib, 1
-    arg n
-    a = 0
-    b = 1
-    i = 1
-    label begin
-        if (i == n) goto end
-        t = b
-        b = a + b
-        a = t
-        i = i + 1
-        goto begin
-    label end
-        ret b
+  arg n
+  a = 0
+  b = 1
+  i = 1
+  label begin
+    if (i == n) goto end
+    t = b
+    b = a + b
+    a = t
+    i = i + 1
+    goto begin
+  label end
+    ret b
 
 function main, 0
-    param 3
-    a = call fib, 1
-    ret a
+  param 3
+  a = call fib, 1
+  ret a
 ```
 ``` bash
 cargo run -- compile -f ./eg/fib.irl --cfg
@@ -68,7 +75,7 @@ Options:
   -v, --verbose              Sets info level to verbose
       --wat                  Generates WAT (Web Assembly Text)
       --wasm                 Generates WASM (Web Assembly)
-      --fasm                 Generates FASM (Flat Assembly)
+      --fasm-linux-x86_64    Generates FASM (Flat Assembly)
   -h, --help                 Print help
 ```
 
@@ -81,5 +88,5 @@ Options:
 - [flatassembler - tgrysztar](https://flatassembler.net/)
 - [wabt - webassembly](https://github.com/WebAssembly/wabt)
 
-### Cortesy
+### Courtesy
 - [fasm-mode - emacsattic](https://github.com/emacsattic/fasm-mode/)

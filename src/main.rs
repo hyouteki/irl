@@ -29,7 +29,7 @@ fn main() {
 	options.verbose_message(String::from("FE over"));
 
 	// module: mw
-	run_default_ast_pass_manager(&mut ast);
+	run_default_ast_pass_manager(&mut ast, &options);
 	options.verbose_message(String::from("MW over"));
 	if options.debug {
 		println!("MW Optimized AST");

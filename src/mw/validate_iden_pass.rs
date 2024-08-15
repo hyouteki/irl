@@ -45,6 +45,7 @@ impl AstPass for ValidateIdenPass {
 			validate_label(node, &context);
 		}
 	}
+	fn name(&self) -> String {String::from("validate_iden_pass")}
 }
 
 fn validate_node(node: &AstNode, context: &mut Context) {

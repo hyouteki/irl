@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::fe::{loc::Loc, token::{Token, TokenKind}};
 
 fn print_indent(f: &mut std::fmt::Formatter, indent_sz: usize) {	
@@ -596,6 +596,59 @@ impl AstNode {
 			AstNode::If(_) => {},
 			AstNode::Ret(_) => {},
 		};
+	}
+	pub fn value_operands(&self) -> HashSet<String> {
+		match self {
+			AstNode::Iden(iden_node) => HashSet::from([iden_node.name.clone()]),
+			AstNode::Num(_) => HashSet::new(),
+			AstNode::Call(call_node) => HashSet::from([call_node.id.clone()]),
+			AstNode::Arith(arith_node) => {
+				let mut res = arith_node.lhs.value_operands();
+				res.extend(arith_node.rhs.value_operands());
+				res
+			},
+			AstNode::Relop(relop_node) => {
+				let mut res = relop_node.lhs.value_operands();
+				res.extend(relop_node.rhs.value_operands());
+				res
+			},
+			AstNode::Unary(unary_node) => unary_node.var.value_operands(),
+			AstNode::Function(function_node) => {
+				let mut res = HashSet::new();
+				for arg in function_node.args.iter() {res.extend(arg.value_operands())}
+				for node in function_node.body.iter() {res.extend(node.value_operands())}
+				res
+			},
+			AstNode::Assignment(assignment_node) => {
+				let mut res = HashSet::from([assignment_node.name.clone()]);
+				res.extend(assignment_node.var.value_operands());
+				res
+			},
+			AstNode::Goto(_) => HashSet::new(),
+			AstNode::Label(label_node) => {
+				let mut res = HashSet::new();
+				for node in label_node.body.iter() {res.extend(node.value_operands())}
+				res
+			},
+			AstNode::If(if_node) => if_node.condition.value_operands(),
+			AstNode::Ret(ret_node) => ret_node.var.value_operands(),
+		}
+	}
+	pub fn loc(&self) -> Loc {
+		match self {
+			AstNode::Iden(node) => node.loc.clone(),
+			AstNode::Num(node) => node.loc.clone(),
+			AstNode::Call(node) => node.loc.clone(),
+			AstNode::Arith(node) => node.loc.clone(),
+			AstNode::Relop(node) => node.loc.clone(),
+			AstNode::Unary(node) => node.loc.clone(),
+			AstNode::Function(node) => node.loc.clone(),
+			AstNode::Assignment(node) => node.loc.clone(),
+			AstNode::Goto(node) => node.loc.clone(),
+			AstNode::Label(node) => node.loc.clone(),
+			AstNode::If(node) => node.loc.clone(),
+			AstNode::Ret(node) => node.loc.clone(),
+		}
 	}
 }
 
