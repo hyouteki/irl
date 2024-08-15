@@ -3,7 +3,6 @@ function fib, 1
     a = 0
     b = 1
     i = 1
-	// goto hello
     label begin
         if (i == n) goto end
         t = b
@@ -11,14 +10,12 @@ function fib, 1
         a = t
         i = i + 1
 		goto begin
-		d = 0
-		d = d + 1
-	// label hello
-	// 	ret 3
     label end
     	ret b
 
 function main, 0
-    param 3
+    param 6
     a = call fib, 1
-    ret a
+	param a
+	tmp = call print, 1
+    ret 0

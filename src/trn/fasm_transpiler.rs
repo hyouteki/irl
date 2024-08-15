@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::{prelude::*, BufReader};
 use crate::fe::ast::*;
 use crate::trn::transpiler::*;
 
@@ -35,16 +36,17 @@ impl Context {
 	}
 }
 
-// const MEM_REG: &str = "r14";
+const INTERIM_REG: &str = "r15d";
+const INTERIM_REG_2: &str = "r14d";
 
 #[inline]
 fn call_convention() -> Vec<String> {
-    vec![String::from("rdi"), 
-         String::from("rsi"), 
-         String::from("rdx"), 
-         String::from("rcx"), 
-         String::from("r8"),  
-         String::from("r9")]
+    vec![String::from("edi"), 
+         String::from("esi"), 
+         String::from("edx"), 
+         String::from("ecx"), 
+         String::from("r8d"),  
+         String::from("r9d")]
 }
 
 fn inst(opcode: &str, to: Operand, from: Operand) -> String {
@@ -58,7 +60,10 @@ fn ast_node_to_operand(node: AstNode, context: &Context) -> Operand {
 			None => unreachable!()
 		},
 		AstNode::Num(num_node) => Operand::Immediate(num_node.num),
-		_ => unreachable!()
+		_ => {
+			println!("debug: {}", node);
+			unreachable!()
+		}
 	}
 }
 
@@ -67,6 +72,7 @@ impl Transpiler for FasmTranspiler {
 		let mut lines: Vec<String> = Vec::new();
 		lines.append(&mut header());
 		lines.append(&mut top_level_transpilation(nodes, 0));
+		lines.append(&mut footer());
 		lines
 	}
 }
@@ -76,6 +82,12 @@ fn header() -> Vec<String> {
 		 String::from("entry main"),
 		 String::from("segment gnustack"),
 		 String::from("segment executable")]
+}
+
+fn footer() -> Vec<String> {
+	let footer_path = format!("{}/src/trn/fasm_footer.fasm", env!("CARGO_MANIFEST_DIR"));
+	BufReader ::new(std::fs::File::open(&footer_path).expect("could not open file"))
+		.lines().map(|line| line.expect("could not parse file")).collect()
 }
 
 fn top_level_transpilation(nodes: &Vec<AstNode>, indent_sz: usize) -> Vec<String> {
@@ -95,6 +107,17 @@ fn top_level_transpilation(nodes: &Vec<AstNode>, indent_sz: usize) -> Vec<String
 			for (ix, value_operand) in node.value_operands().iter().enumerate() {
 				context.operands.insert(value_operand.to_string(), Operand::Memory(format!("[rsp+{}]", ix*4)));
 			}
+			let call_convention: Vec<String> = call_convention();
+			if function_node.args.len() > call_convention.len() {
+				function_node.loc.error(format!("fasm target currently only supports '{}' arguments at max",
+												call_convention.len()));
+			}
+			for (ix, arg) in function_node.args.iter().enumerate() {
+				lines.push(indent(indent_sz+1, inst(
+					"mov",
+					ast_node_to_operand(arg.clone(), &context),
+					Operand::Register(call_convention[ix].clone()))));
+			}
 			lines.append(&mut transpile_nodes(&function_node.body, indent_sz+1, &context));
 		} else {
 			panic!("only function nodes are allowed in top level scope");
@@ -112,6 +135,72 @@ fn transpile_nodes(nodes: &Vec<AstNode>, indent_sz: usize, context: &Context) ->
 fn transpile_node(node: &AstNode, indent_sz: usize, context: &Context) -> Vec<String> {
 	let mut lines: Vec<String> = Vec::new();
 	match node {
+		AstNode::Iden(_) => {
+			lines.push(indent(indent_sz, inst(
+				"mov",
+				Operand::Register(String::from(INTERIM_REG)),
+				ast_node_to_operand(node.clone(), context))));
+		},
+		AstNode::Num(num_node) => {
+			lines.push(indent(indent_sz, inst(
+				"mov",
+				Operand::Register(String::from(INTERIM_REG)),
+				Operand::Immediate(num_node.num))));
+		},
+		AstNode::Arith(arith_node) => {
+			lines.append(&mut transpile_node(&*arith_node.lhs, indent_sz, context));
+			lines.push(indent(indent_sz, inst(
+				arith_node.op.to_string().as_str(),
+				Operand::Register(String::from(INTERIM_REG)),
+				ast_node_to_operand(*arith_node.rhs.clone(), context))));
+		},
+		AstNode::Relop(relop_node) => {
+			lines.append(&mut transpile_node(&*relop_node.lhs, indent_sz, context));
+			lines.push(indent(indent_sz, inst(
+				"cmp",
+				Operand::Register(String::from(INTERIM_REG)),
+				ast_node_to_operand(*relop_node.rhs.clone(), context))));
+			lines.push(indent(indent_sz, inst(
+				"mov",
+				Operand::Register(String::from(INTERIM_REG)),
+				Operand::Immediate(0))));
+			lines.push(indent(indent_sz, inst(
+				"mov",
+				Operand::Register(String::from(INTERIM_REG_2)),
+				Operand::Immediate(1))));
+			lines.push(indent(indent_sz, inst(
+				match relop_node.op {
+					RelOp::Eq => "cmove",
+					RelOp::Neq => "cmovne",
+					RelOp::Gt => "cmovg",
+					RelOp::Lt => "cmovl",
+					RelOp::Ge => "cmovge",
+					RelOp::Le => "cmovle",
+				},
+				Operand::Register(String::from(INTERIM_REG)),
+				Operand::Register(String::from(INTERIM_REG_2)))));
+		},
+		AstNode::Unary(unary_node) => {
+			lines.push(indent(indent_sz, inst(
+				"neg",
+				Operand::Register(String::from(INTERIM_REG)),
+				ast_node_to_operand(*unary_node.var.clone(), context))));
+		},
+		AstNode::If(if_node) => {
+			lines.append(&mut transpile_node(&*if_node.condition, indent_sz, context));
+			lines.push(indent(indent_sz, inst(
+				"cmp",
+				Operand::Register(String::from(INTERIM_REG)),
+				Operand::Immediate(1))));
+			lines.push(indent(indent_sz, format!("je {}_label_{}", context.function_name, if_node.label)))
+		},
+		AstNode::Assignment(assignment_node) => {
+			lines.append(&mut transpile_node(&*assignment_node.var, indent_sz, context));
+			lines.push(indent(indent_sz, inst(
+				"mov",
+				context.operands.get(&assignment_node.name).unwrap().clone(),
+				Operand::Register(String::from(INTERIM_REG)))));
+		}
 		AstNode::Call(call_node) => {
 			let call_convention: Vec<String> = call_convention();
 			if call_node.params.len() > call_convention.len() {
@@ -128,7 +217,7 @@ fn transpile_node(node: &AstNode, indent_sz: usize, context: &Context) -> Vec<St
 			lines.push(indent(indent_sz, inst(
 				"mov",
 				context.operands.get(&call_node.id).unwrap().clone(),
-				Operand::Register(String::from("rax")))));
+				Operand::Register(String::from("eax")))));
 		}
 		AstNode::Label(label_node) => {
 			lines.push(indent(indent_sz, format!("{}_label_{}:", context.function_name, label_node.name)));
@@ -141,11 +230,11 @@ fn transpile_node(node: &AstNode, indent_sz: usize, context: &Context) -> Vec<St
 			if context.entry_point {
 				lines.push(indent(indent_sz, inst(
 					"mov",
-					Operand::Register(String::from("rax")),
+					Operand::Register(String::from("eax")),
 					Operand::Immediate(60))));
 				lines.push(indent(indent_sz, inst(
 					"mov",
-					Operand::Register(String::from("rdi")),
+					Operand::Register(String::from("edi")),
 					ast_node_to_operand(*ret_node.var.clone(), context))));
 				lines.push(indent(indent_sz, inst(
 					"add",
@@ -155,7 +244,7 @@ fn transpile_node(node: &AstNode, indent_sz: usize, context: &Context) -> Vec<St
 			} else {
 				lines.push(indent(indent_sz, inst(
 					"mov",
-					Operand::Register(String::from("rax")),
+					Operand::Register(String::from("eax")),
 					ast_node_to_operand(*ret_node.var.clone(), context))));
 				lines.push(indent(indent_sz, inst(
 					"add",

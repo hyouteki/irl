@@ -26,7 +26,7 @@ digraph "./eg/test.dot" {
         main_ENTRY -> main_BB0;
         main_BB0 [shape=record label="[0]\n"];
         main_BB0 -> main_BB1;
-        main_BB1 [shape=record label="[1]\nparam 3\la = call fib, 1\lret a\l"];
+        main_BB1 [shape=record label="[1]\nparam 6\la = call fib, 1\lparam a\ltmp = call print, 1\lret 0\l"];
         main_BB1 -> main_EXIT;
     }
 

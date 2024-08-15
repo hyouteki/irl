@@ -62,5 +62,9 @@ fn main() {
 		}
 	}
 
+	if options.run {
+		options.run_command(&[&remove_extension(options.filepath.clone(), "irl")]);
+	}
+
 	transpile(&options, &ast, options.filepath.clone());
 }

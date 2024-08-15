@@ -4,24 +4,77 @@ segment gnustack
 segment executable
 fib:
   sub rsp, 20
+  mov [rsp+16], edi
   jmp fib_label_1
   fib_label_1:
+    mov r15d, 0
+    mov [rsp+0], r15d
+    mov r15d, 1
+    mov [rsp+12], r15d
+    mov r15d, 1
+    mov [rsp+4], r15d
     jmp fib_label_begin
   fib_label_begin:
+    mov r15d, [rsp+4]
+    cmp r15d, [rsp+16]
+    mov r15d, 0
+    mov r14d, 1
+    cmove r15d, r14d
+    cmp r15d, 1
+    je fib_label_end
     jmp fib_label_4
   fib_label_end:
-    mov r14, [rsp+0]
+    mov eax, [rsp+12]
     add rsp, 20
-    mov rax, r14
     ret
   fib_label_4:
+    mov r15d, [rsp+12]
+    mov [rsp+8], r15d
+    mov r15d, [rsp+0]
+    add r15d, [rsp+12]
+    mov [rsp+12], r15d
+    mov r15d, [rsp+8]
+    mov [rsp+0], r15d
+    mov r15d, [rsp+4]
+    add r15d, 1
+    mov [rsp+4], r15d
     jmp fib_label_begin
 main:
-  sub rsp, 4
+  sub rsp, 8
   jmp main_label_1
   main_label_1:
-    mov r14, [rsp+0]
-    add rsp, 4
-    mov rax, 60
-    mov rdi, r14
+    mov edi, 6
+    call fib
+    mov [rsp+4], eax
+    mov edi, [rsp+4]
+    call print
+    mov [rsp+0], eax
+    mov eax, 60
+    mov edi, 0
+    add rsp, 8
     syscall
+print:                            ;; Convert integer to string (in reverse order)
+  mov rax, rdi                    ;; Move the input integer to rax
+  lea rsi, [print_buffer+19]      ;; Point to the end of the buffer
+  mov byte [rsi], 0               ;; Null-terminate the string
+  dec rsi
+  mov byte [rsi], 10              ;; Append newline character
+  print_label_convert_loop:
+    xor rdx, rdx                  ;; Clear rdx
+    mov rbx, 10                   ;; Divisor (10 for base 10)
+    div rbx                       ;; Divide rax by 10 (rdx = remainder, rax = quotient)
+    add dl, '0'
+    dec rsi                       ;; Move the pointer back
+    mov [rsi], dl                 ;; Store the ASCII character in the buffer
+    test rax, rax                 ;; Check if quotient is zero
+    jnz print_label_convert_loop
+  ;; Print the string
+  mov rdx, print_buffer+20        ;; Calculate string length
+  sub rdx, rsi                    ;; Length = buffer end - current position
+  mov rax, 1
+  mov rdi, 1
+  syscall
+  ret
+
+segment readable writeable
+print_buffer rb 20

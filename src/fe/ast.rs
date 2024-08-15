@@ -88,6 +88,14 @@ impl ArithOp {
 			},
 		}	
 	}
+	pub fn to_string(&self) -> String {
+		String::from(match self {
+			ArithOp::Sum => "add",
+			ArithOp::Sub => "sub",
+			ArithOp::Mul => "mul",
+			ArithOp::Div => "div",
+		})
+	}
 }
 
 impl std::fmt::Display for ArithOp {

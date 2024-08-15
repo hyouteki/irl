@@ -24,12 +24,12 @@ In the IRL architecture, the initial step involves converting the source code in
 
 The corrected AST then proceeds to the optimization ([`opt`](./src/opt)) module, where it is transformed into a [CFG](https://en.wikipedia.org/wiki/Control-flow_graph) (Control Flow Graph). This module applies Compiler Passes to the CFG to optimize it, including [`reduce_pass`](./src/opt/reduce_pass.rs) for simplifying the CFG, [`constant_fold_pass`](./src/opt/constant_propagation_pass.rs) for folding constants, and `reaching_definition_pass` for eliminating redundant instructions.
 
-The optimized CFG is then passed to the translation (`trn`) module, which translates it into assembly code tailored to the target architecture.
+The optimized CFG is then passed to the translation ([`trn`](./src/trn)) module, which translates it into assembly code tailored to the target architecture.
 
 ### Supported Targets
 | flag                   | Status         | Notes                            |
 |------------------------|----------------|----------------------------------|
-| `fasm-linux-x86_64`    | ✖️ In Progress | Future support under development |
+| `fasm-linux-x86_64`    | ✔️ Supported   | Full functionality available     |
 | `fasm-windows-x86_64`  | ✖️ Planned     | Future support under development |
 | `wasm`                 | ✖️ Planned     | Future support under development |
 
@@ -51,12 +51,21 @@ function fib, 1
     ret b
 
 function main, 0
-  param 3
+  param 6
   a = call fib, 1
-  ret a
+  param a
+  tmp = call print, 1
+  ret 0
 ```
 ``` bash
-cargo run -- compile -f ./eg/fib.irl --cfg
+cargo run -- compile -r -f ./eg/fib.irl --cfg --fasm-linux-x86_64
+```
+``` console
+hyouteki@VivoBookAsusLaptop:/mnt/c/Hyouteki/projects/irl/eg$ ./fib
+8
+hyouteki@VivoBookAsusLaptop:/mnt/c/Hyouteki/projects/irl/eg$ echo $?
+0
+hyouteki@VivoBookAsusLaptop:/mnt/c/Hyouteki/projects/irl/eg$
 ```
 > Generated control flow graph of this example
 > 
@@ -73,6 +82,7 @@ Options:
       --cfg                  Output control flow graph of the program as a svg
   -d, --debug                Dumps debug info onto stdout
   -v, --verbose              Sets info level to verbose
+  -r, --run                  Runs the binary after compilation
       --wat                  Generates WAT (Web Assembly Text)
       --wasm                 Generates WASM (Web Assembly)
       --fasm-linux-x86_64    Generates FASM (Flat Assembly)

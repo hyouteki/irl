@@ -7,12 +7,12 @@ pub trait Transpiler {
 	fn transpile(&self, nodes: &Vec<AstNode>) -> Vec<String>;
 }
 
-fn remove_extension(filepath: String, ext: &str) -> String {
-	filepath.as_str().trim_end_matches(ext).to_string()
+pub fn remove_extension(filepath: String, ext: &str) -> String {
+	filepath.as_str().trim_end_matches(format!(".{}", ext).as_str()).to_string()
 }
 
 pub fn replace_extension(filepath: String, old_ext: &str, new_ext: &str) -> String {
-	format!("{}{}", remove_extension(filepath, old_ext), new_ext)
+	format!("{}.{}", remove_extension(filepath, old_ext), new_ext)
 }
 
 pub fn indent(indent_sz: usize, text: String) -> String {
@@ -43,5 +43,6 @@ pub fn transpile(options: &CliOptions, nodes: &Vec<AstNode>, filepath: String) {
 	if options.fasm {
 		let fasm_filepath: String = replace_extension(filepath.clone(), "irl", "fasm");
 		transpilation_mode(FasmTranspiler{}, nodes, fasm_filepath.clone());
+		options.run_command(&["fasm", fasm_filepath.as_str()]);
 	}
 }

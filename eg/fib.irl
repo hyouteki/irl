@@ -1,19 +1,21 @@
 function fib, 1
-	arg n
-	a = 0
-	b = 1
-	i = 1
-	label begin
-		if (i == n) goto end
-		t = b
-		b = a + b
-		a = t
-		i = i + 1
+    arg n
+    a = 0
+    b = 1
+    i = 1
+    label begin
+        if (i == n) goto end
+        t = b
+        b = a + b
+        a = t
+        i = i + 1
 		goto begin
-	label end
-		ret b
+    label end
+    	ret b
 
 function main, 0
-	param 3
-	a = call fib, 1
-	ret a
+    param 6
+    a = call fib, 1
+	param a
+	tmp = call print, 1
+    ret 0

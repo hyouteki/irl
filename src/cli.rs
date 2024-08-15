@@ -8,6 +8,7 @@ pub struct CliOptions {
 	pub wat: bool,
 	pub wasm: bool,
 	pub fasm: bool,
+	pub run: bool,
 }
 
 impl CliOptions {
@@ -22,6 +23,7 @@ impl CliOptions {
 			wat: *compile_args.unwrap().get_one::<bool>("wat").unwrap(),
 			wasm: *compile_args.unwrap().get_one::<bool>("wasm").unwrap(),
 			fasm: *compile_args.unwrap().get_one::<bool>("fasm").unwrap(),
+			run: *compile_args.unwrap().get_one::<bool>("run").unwrap(),
 		}
 	}
 	pub fn verbose_message(&self, message: String) {
@@ -83,6 +85,12 @@ pub fn cli() -> Command {
                      .required(false)
                      .action(ArgAction::SetTrue)
                      .help("Sets info level to verbose"))
+				.arg(Arg::new("run")
+					 .short('r')
+                     .long("run")
+                     .required(false)
+                     .action(ArgAction::SetTrue)
+                     .help("Runs the binary after compilation"))
 				.arg(Arg::new("wat")
                      .long("wat")
                      .required(false)
