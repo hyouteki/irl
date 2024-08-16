@@ -131,6 +131,20 @@ fn parse_assignment(tokens: &Vec<Token>, ix: &mut usize) -> AstNode {
 		assert_n_eat(tokens, TokenKind::Eol, ix);
 		return AstNode::Call(CallAstNode{id: id, name: name, params: vec![], loc: loc});
 	}
+	if tokens[*ix].kind == TokenKind::Alloc {
+		assert_n_eat(tokens, TokenKind::Alloc, ix);
+		let size: AstNode = eat_operand(tokens, ix);
+		assert_n_eat(tokens, TokenKind::Eol, ix);
+		return AstNode::Assignment(AssignmentAstNode{name: id, var: Box::new(
+			AstNode::Alloc(AllocAstNode{size: Box::new(size), loc: var_loc})), loc});
+	}
+	if tokens[*ix].kind == TokenKind::Load {
+		assert_n_eat(tokens, TokenKind::Load, ix);
+		let ptr: String = eat_iden(tokens, ix);
+		assert_n_eat(tokens, TokenKind::Eol, ix);
+		return AstNode::Assignment(AssignmentAstNode{name: id, var: Box::new(
+			AstNode::Load(LoadAstNode{ptr: ptr, loc: var_loc})), loc});
+	}
 	let lhs: AstNode = eat_operand(tokens, ix);
 	if tokens[*ix].is_arith() {
 		let op: ArithOp = ArithOp::new(&tokens[*ix]);

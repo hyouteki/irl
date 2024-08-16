@@ -1,0 +1,7 @@
+function main, 0
+    r1 = alloc 4
+    store r1, 42
+    r2 = load r1
+    param r2
+    tmp = call print, 1
+    ret 0 

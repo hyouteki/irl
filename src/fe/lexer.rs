@@ -48,7 +48,10 @@ impl Lexer {
 		    (String::from("if"), TokenKind::If),
 		    (String::from("param"), TokenKind::Param),
 		    (String::from("call"), TokenKind::Call),
-		    (String::from("ret"), TokenKind::Ret)
+		    (String::from("ret"), TokenKind::Ret),
+		    (String::from("alloc"), TokenKind::Alloc),
+		    (String::from("load"), TokenKind::Load),
+		    (String::from("store"), TokenKind::Store)
 		].iter().cloned().collect();
 
 		for i in 0..content.len() {

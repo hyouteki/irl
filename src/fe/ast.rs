@@ -231,6 +231,62 @@ impl UnaryAstNode {
 }
 
 #[derive(Clone)]
+pub struct AllocAstNode {
+	pub size: Box<AstNode>,
+	pub loc: Loc,
+}
+
+impl PartialEq for AllocAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.size == other.size
+    }
+}
+
+impl AllocAstNode {
+	fn print(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "alloc {}", self.size)
+	}
+}
+
+#[derive(Clone)]
+pub struct LoadAstNode {
+	pub ptr: String,
+	pub loc: Loc,
+}
+
+impl PartialEq for LoadAstNode {
+    fn eq(&self, other: &Self) -> bool {
+		self.ptr == other.ptr
+    }
+}
+
+impl LoadAstNode {
+	fn print(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "load {}", self.ptr)
+	}
+}
+
+#[derive(Clone)]
+pub struct StoreAstNode {
+	pub ptr: String,
+	pub op: Box<AstNode>,
+	pub loc: Loc,
+}
+
+impl PartialEq for StoreAstNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.ptr == other.ptr && self.op == other.op
+    }
+}
+
+impl StoreAstNode {
+	fn print(&self, f: &mut std::fmt::Formatter, indent_sz: usize) -> std::fmt::Result {
+		print_indent(f, indent_sz);
+		write!(f, "store {}, {}", self.ptr, self.op)
+	}
+}
+
+#[derive(Clone)]
 pub struct FunctionAstNode {
 	pub name: String,
 	pub args: Vec<AstNode>,
@@ -387,6 +443,9 @@ pub enum AstNode {
 	Arith(ArithAstNode),
 	Relop(RelopAstNode),
 	Unary(UnaryAstNode),
+	Alloc(AllocAstNode),
+	Load(LoadAstNode),
+	Store(StoreAstNode),
 	Function(FunctionAstNode),
 	Assignment(AssignmentAstNode),
 	Goto(GotoAstNode),
@@ -410,6 +469,9 @@ impl AstNode {
 			AstNode::Label(node) => node.print(f, indent_sz),
 			AstNode::If(node) => node.print(f, indent_sz),
 			AstNode::Ret(node) => node.print(f, indent_sz),
+			AstNode::Alloc(node) => node.print(f),
+			AstNode::Load(node) => node.print(f),
+			AstNode::Store(node) => node.print(f, indent_sz),
 		}
 	}
 	pub fn is_terminator(&self) -> bool {
@@ -422,66 +484,39 @@ impl AstNode {
 	}
 	pub fn dependencies(&self) -> Vec<String> {
 		match self {
-			AstNode::Iden(_) => vec![],
+			AstNode::Iden(iden_node) => vec![iden_node.name.clone()],
 			AstNode::Num(_) => vec![],
 			AstNode::Call(node) => {
 				let mut res: Vec<String> = Vec::new();
 				for param in node.params.iter() {
-					if let AstNode::Iden(iden) = param {
-						res.push(iden.name.clone());
-					}
+					res.append(&mut param.dependencies());
 				}
 				res
 			},
 			AstNode::Arith(node) => {
 				let mut res: Vec<String> = Vec::new();
-				if let AstNode::Iden(ref iden) = *node.lhs {
-					res.push(iden.name.clone());
-				}
-				if let AstNode::Iden(ref iden) = *node.rhs {
-					res.push(iden.name.clone());
-				}
+				res.append(&mut node.lhs.dependencies());
+				res.append(&mut node.rhs.dependencies());
 				res
 			},
 			AstNode::Relop(node) => {
 				let mut res: Vec<String> = Vec::new();
-				if let AstNode::Iden(ref iden) = *node.lhs {
-					res.push(iden.name.clone());
-				}
-				if let AstNode::Iden(ref iden) = *node.rhs {
-					res.push(iden.name.clone());
-				}
+				res.append(&mut node.lhs.dependencies());
+				res.append(&mut node.rhs.dependencies());
 				res
 			},
-			AstNode::Unary(node) => {
-				let mut res: Vec<String> = Vec::new();
-				if let AstNode::Iden(ref iden) = *node.var {
-					res.push(iden.name.clone());
-				}
-				res
-			},
+			AstNode::Unary(node) => node.var.dependencies(),
 			AstNode::Function(_) => vec![],
-			AstNode::Assignment(node) => {
-				let mut res: Vec<String> = Vec::new();
-				if let AstNode::Iden(ref iden) = *node.var {
-					res.push(iden.name.clone());
-				}
-				res
-			},
+			AstNode::Assignment(node) => node.var.dependencies(),
 			AstNode::Goto(_) => vec![],
 			AstNode::Label(_) => vec![],
-			AstNode::If(node) => {
-				let mut res: Vec<String> = Vec::new();
-				if let AstNode::Iden(ref iden) = *node.condition {
-					res.push(iden.name.clone());
-				}
-				res
-			},
-			AstNode::Ret(node) => {
-				let mut res: Vec<String> = Vec::new();
-				if let AstNode::Iden(ref iden) = *node.var {
-					res.push(iden.name.clone());
-				}
+			AstNode::If(node) => node.condition.dependencies(),
+			AstNode::Ret(node) => node.var.dependencies(),
+			AstNode::Alloc(node) => node.size.dependencies(),
+			AstNode::Load(node) => vec![node.ptr.clone()],
+			AstNode::Store(node) => {
+				let mut res: Vec<String> = vec![node.ptr.clone()];
+				res.append(&mut node.op.dependencies());
 				res
 			},
 		}
@@ -500,6 +535,9 @@ impl AstNode {
 			AstNode::Label(_) => None,
 			AstNode::If(_) => None,
 			AstNode::Ret(_) => None,
+			AstNode::Alloc(_) => None,
+			AstNode::Load(_) => None,
+			AstNode::Store(node) => Some(node.ptr.clone()),
 		}
 	}
 	pub fn evaluate(&self) -> Value {
@@ -542,6 +580,9 @@ impl AstNode {
 			AstNode::Label(_) => Value::Nac,
 			AstNode::If(_) => Value::Nac,
 			AstNode::Ret(node) => node.var.evaluate(),
+			AstNode::Alloc(_) => Value::Nac,
+			AstNode::Load(_) => Value::Nac,
+			AstNode::Store(_) => Value::Nac,
 		}
 	}
 	pub fn reduced_version(&self, state: &HashMap<String, Value>) -> AstNode {

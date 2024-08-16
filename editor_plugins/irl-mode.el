@@ -15,7 +15,7 @@
 	table))
 
 (defvar irl-keywords
-  '("function" "arg" "goto" "label" "if" "param" "ret" "call"))
+  '("function" "arg" "goto" "label" "if" "param" "ret" "call" "alloc" "load" "store"))
 
 (defvar irl-operators
   '("=" "\\+" "-" "\\*" "/" "<=" "==" "!=" "<" ">" ">="))
