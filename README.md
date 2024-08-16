@@ -58,14 +58,10 @@ function main, 0
   ret 0
 ```
 ``` bash
-cargo run -- compile -r -f ./eg/fib.irl --cfg --fasm-linux-x86_64
-```
-``` console
-hyouteki@VivoBookAsusLaptop:/mnt/c/Hyouteki/projects/irl/eg$ ./fib
+$ cargo run -- compile -r -f ./eg/fib.irl --cfg --fasm-linux-x86_64
 8
-hyouteki@VivoBookAsusLaptop:/mnt/c/Hyouteki/projects/irl/eg$ echo $?
+$ echo $?
 0
-hyouteki@VivoBookAsusLaptop:/mnt/c/Hyouteki/projects/irl/eg$
 ```
 > Generated control flow graph of this example
 > 
