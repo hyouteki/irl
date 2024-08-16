@@ -57,7 +57,7 @@ function main, 0
   tmp = call print, 1
   ret 0
 ```
-``` bash
+``` console
 $ cargo run -- compile -r -f ./eg/fib.irl --cfg --fasm-linux-x86_64
 8
 $ echo $?
