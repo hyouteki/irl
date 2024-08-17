@@ -490,7 +490,7 @@ impl AstNode {
 	pub fn dependencies(&self) -> Vec<String> {
 		match self {
 			AstNode::Iden(iden_node) => vec![iden_node.name.clone()],
-			AstNode::Num(_) => vec![],
+			AstNode::Num(_) => Vec::new(),
 			AstNode::Call(node) => {
 				let mut res: Vec<String> = Vec::new();
 				for param in node.params.iter() {
@@ -511,10 +511,16 @@ impl AstNode {
 				res
 			},
 			AstNode::Unary(node) => node.var.dependencies(),
-			AstNode::Function(_) => vec![],
+			AstNode::Function(node) => {
+				let mut res: Vec<String> = Vec::new();
+				for arg in node.args.iter() {
+					res.append(&mut arg.dependencies());
+				}
+				res
+			},
 			AstNode::Assignment(node) => node.var.dependencies(),
-			AstNode::Goto(_) => vec![],
-			AstNode::Label(_) => vec![],
+			AstNode::Goto(_) => Vec::new(),
+			AstNode::Label(_) => Vec::new(),
 			AstNode::If(node) => node.condition.dependencies(),
 			AstNode::Ret(node) => node.var.dependencies(),
 			AstNode::Alloc(node) => node.size.dependencies(),

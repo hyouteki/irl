@@ -49,49 +49,20 @@ impl AstPass for ValidateIdenPass {
 }
 
 fn validate_node(node: &AstNode, context: &mut Context) {
+	for dependency in node.dependencies().iter() {
+		if !context.idens.contains(dependency) {
+			node.loc().message(String::from("validate_iden_pass: failed"));
+			node.loc().error(format!("unknown identifier '{}'", dependency));
+		}
+	}
+	if let Some(prod) = node.production() {
+		context.insert_iden(prod);
+	}
 	match node {
-		AstNode::Call(node) => {
-			for param in node.params.iter() {
-				if let AstNode::Iden(iden_node) = param {
-					context.validate_iden(iden_node);
-				}
-			}
-			context.insert_iden(node.id.clone());
-		},
-		AstNode::Arith(node) => {
-			if let AstNode::Iden(ref iden_lhs) = *node.lhs {
-				context.validate_iden(iden_lhs);
-			}
-			if let AstNode::Iden(ref iden_rhs) = *node.rhs {
-				context.validate_iden(iden_rhs);
-			}
-		},
-		AstNode::Relop(node) => {
-			if let AstNode::Iden(ref iden_lhs) = *node.lhs {
-				context.validate_iden(iden_lhs);
-			}
-			if let AstNode::Iden(ref iden_rhs) = *node.rhs {
-				context.validate_iden(iden_rhs);
-			}
-		},
-		AstNode::Unary(node) => {
-			if let AstNode::Iden(ref iden_var) = *node.var {
-				context.validate_iden(iden_var);
-			}
-		},
 		AstNode::Function(node) => {
-			for arg in node.args.iter() {
-				if let AstNode::Iden(iden_node) = arg {
-					context.insert_iden(iden_node.name.clone());
-				}
-			}
 			for body_node in node.body.iter() {
 				validate_node(body_node, context);
 			}
-		},
-		AstNode::Assignment(node) => {
-			validate_node(&*node.var, context);
-			context.insert_iden(node.name.clone());
 		},
 		AstNode::Label(node) => {
 			context.insert_label(&node.name, node.loc.clone());
@@ -100,7 +71,6 @@ fn validate_node(node: &AstNode, context: &mut Context) {
 				validate_node(body_node, &mut inner_context);
 			} 
 		},
-		AstNode::If(node) => validate_node(&*node.condition, context),
 		AstNode::Ret(node) => {
 			if let AstNode::Iden(ref iden_var) = *node.var {
 				context.validate_iden(iden_var);

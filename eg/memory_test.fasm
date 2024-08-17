@@ -2,56 +2,19 @@ format ELF64 executable 3
 entry main
 segment gnustack
 segment executable
-fib:
-  sub rsp, 20
-  mov [rsp+8], edi
-  jmp fib_label_1
-  fib_label_1:
-    mov r15d, 0
-    mov [rsp+16], r15d
-    mov r15d, 1
-    mov [rsp+4], r15d
-    mov r15d, 1
-    mov [rsp+12], r15d
-    jmp fib_label_begin
-  fib_label_begin:
-    mov r15d, [rsp+12]
-    cmp r15d, [rsp+8]
-    mov r15d, 0
-    mov r14d, 1
-    cmove r15d, r14d
-    cmp r15d, 1
-    je fib_label_end
-    jmp fib_label_4
-  fib_label_end:
-    mov eax, [rsp+4]
-    add rsp, 20
-    ret
-  fib_label_4:
-    mov r15d, [rsp+4]
-    mov [rsp+0], r15d
-    mov r15d, [rsp+16]
-    add r15d, [rsp+4]
-    mov [rsp+4], r15d
-    mov r15d, [rsp+0]
-    mov [rsp+16], r15d
-    mov r15d, [rsp+12]
-    add r15d, 1
-    mov [rsp+12], r15d
-    jmp fib_label_begin
 main:
-  sub rsp, 8
+  sub rsp, 12
   jmp main_label_1
   main_label_1:
-    mov edi, 6
-    call fib
-    mov [rsp+4], eax
-    mov edi, [rsp+4]
+    mov [rsp+8], r15d
+    mov r15d, 42
+    mov [rsp+0], r15d
+    mov edi, [rsp+0]
     call print
-    mov [rsp+0], eax
+    mov [rsp+4], eax
     mov eax, 60
     mov edi, 0
-    add rsp, 8
+    add rsp, 12
     syscall
 print:                            ;; Convert integer to string (in reverse order)
   mov rax, rdi                    ;; Move the input integer to rax
