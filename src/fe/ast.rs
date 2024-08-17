@@ -282,7 +282,7 @@ impl PartialEq for StoreAstNode {
 impl StoreAstNode {
 	fn print(&self, f: &mut std::fmt::Formatter, indent_sz: usize) -> std::fmt::Result {
 		print_indent(f, indent_sz);
-		write!(f, "store {}, {}", self.ptr, self.op)
+		write!(f, "store {}, {}\n", self.ptr, self.op)
 	}
 }
 
@@ -417,9 +417,11 @@ impl RetAstNode {
 	}
 }
 
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
 	Constant(i32),
+	Pointer(Box<Value>),
 	Undefined,
 	Nac
 }
@@ -430,6 +432,9 @@ pub fn value_join(v1: Value, v2: Value) -> Value {
 			Value::Constant(c1)} else {Value::Nac},
 		(Value::Constant(c1), Value::Undefined) => Value::Constant(c1),
 		(Value::Undefined, Value::Constant(c2)) => Value::Constant(c2),
+		(Value::Pointer(c1), Value::Pointer(c2)) => Value::Pointer(Box::new(value_join(*c1, *c2))),
+		(Value::Pointer(c1), Value::Undefined) => Value::Pointer(c1),
+		(Value::Undefined, Value::Pointer(c2)) => Value::Pointer(c2),
 		(_, Value::Nac) | (Value::Nac, _) => Value::Nac,
 		_ => Value::Undefined
 	}
@@ -593,35 +598,53 @@ impl AstNode {
 			AstNode::Num(_) => self.clone(),
 			AstNode::Call(_) => self.clone(),
 			AstNode::Arith(node) => {
-				let mut res = node.clone();
-				*res.lhs = res.lhs.reduced_version(state);
-				*res.rhs = res.rhs.reduced_version(state);
-				AstNode::Arith(*Box::new(res))
+				let mut new_node: ArithAstNode = node.clone();
+				*new_node.lhs = new_node.lhs.reduced_version(state);
+				*new_node.rhs = new_node.rhs.reduced_version(state);
+				AstNode::Arith(new_node)
+			},
+			AstNode::Alloc(node) => {
+				let mut new_node: AllocAstNode = node.clone();
+				*new_node.size = new_node.size.reduced_version(state);
+				AstNode::Alloc(new_node)
+			},
+			AstNode::Load(node) => {
+				if let Some(Value::Pointer(boxed_value)) = state.get(&node.ptr) {
+					if let Value::Constant(c) = **boxed_value {
+						return AstNode::Num(NumAstNode{num: c, loc: node.loc.clone()});
+					}
+				}
+				self.clone()
+			},
+			AstNode::Store(node) => {
+				let mut new_node: StoreAstNode = node.clone();
+				*new_node.op = new_node.op.reduced_version(state);
+				AstNode::Store(new_node)
 			},
 			AstNode::Relop(node) => {
-				let mut res = node.clone();
-				*res.lhs = res.lhs.reduced_version(state);
-				*res.rhs = res.rhs.reduced_version(state);
-				AstNode::Relop(*Box::new(res))
+				let mut new_node: RelopAstNode = node.clone();
+				*new_node.lhs = new_node.lhs.reduced_version(state);
+				*new_node.rhs = new_node.rhs.reduced_version(state);
+				AstNode::Relop(new_node)
 			},
 			AstNode::Unary(node) => {
-				let mut res = node.clone();
-				*res.var = res.var.reduced_version(state);
-				AstNode::Unary(*Box::new(res))
+				let mut new_node: UnaryAstNode = node.clone();
+				*new_node.var = new_node.var.reduced_version(state);
+				AstNode::Unary(new_node)
 			},
 			AstNode::Function(_) => self.clone(),
 			AstNode::Assignment(node) => {
-				let mut res = node.clone();
-				*res.var = res.var.reduced_version(state);
-				AstNode::Assignment(*Box::new(res))
+				let mut new_node: AssignmentAstNode = node.clone();
+				*new_node.var = new_node.var.reduced_version(state);
+				AstNode::Assignment(new_node)
 			},
 			AstNode::Goto(_) => self.clone(),
 			AstNode::Label(_) => self.clone(),
 			AstNode::If(_) => self.clone(),
 			AstNode::Ret(node) => {
-				let mut res = node.clone();
-				*res.var = res.var.reduced_version(state);
-				AstNode::Ret(*Box::new(res))
+				let mut new_node: RetAstNode = node.clone();
+				*new_node.var = new_node.var.reduced_version(state);
+				AstNode::Ret(new_node)
 			},
 		}
 	}
@@ -634,6 +657,12 @@ impl AstNode {
 			AstNode::Num(_) => {},
 			AstNode::Call(node) => {state.insert(node.id.clone(), Value::Nac);},
 			AstNode::Arith(_) => {},
+			AstNode::Alloc(_) => {},
+			AstNode::Load(_) => {},
+			AstNode::Store(node) => {
+				state.insert(node.ptr.clone(), Value::Pointer(Box::new(
+					node.op.reduced_version(&*state).evaluate())));
+			},
 			AstNode::Relop(_) => {},
 			AstNode::Unary(_) => {},
 			AstNode::Function(_) => {},
@@ -656,6 +685,13 @@ impl AstNode {
 				res.extend(arith_node.rhs.value_operands());
 				res
 			},
+			AstNode::Alloc(alloc_node) => alloc_node.size.value_operands(),
+			AstNode::Load(load_node) => HashSet::from([load_node.ptr.clone()]),
+			AstNode::Store(store_node) => {
+				let mut res = HashSet::from([store_node.ptr.clone()]);
+				res.extend(store_node.op.value_operands());
+				res
+			}
 			AstNode::Relop(relop_node) => {
 				let mut res = relop_node.lhs.value_operands();
 				res.extend(relop_node.rhs.value_operands());
@@ -697,6 +733,9 @@ impl AstNode {
 			AstNode::Label(node) => node.loc.clone(),
 			AstNode::If(node) => node.loc.clone(),
 			AstNode::Ret(node) => node.loc.clone(),
+			AstNode::Alloc(node) => node.loc.clone(),
+			AstNode::Load(node) => node.loc.clone(),
+			AstNode::Store(node) => node.loc.clone(),
 		}
 	}
 }

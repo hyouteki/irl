@@ -1,0 +1,14 @@
+digraph "./eg/memory_test.dot" {
+    subgraph cluster_main {
+        label="main";
+        graph [style=filled];
+        main_ENTRY [label="ENTRY"];
+        main_EXIT [label="EXIT"];
+        main_ENTRY -> main_BB0;
+        main_BB0 [shape=record label="[0]\n"];
+        main_BB0 -> main_BB1;
+        main_BB1 [shape=record label="[1]\nr1 = alloc 4\lstore r1, 42\lr2 = 42\lparam r2\ltmp = call print, 1\lret 0\l"];
+        main_BB1 -> main_EXIT;
+    }
+
+}

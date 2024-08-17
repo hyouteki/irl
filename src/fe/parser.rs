@@ -168,6 +168,16 @@ fn parse_assignment(tokens: &Vec<Token>, ix: &mut usize) -> AstNode {
 	AstNode::Assignment(AssignmentAstNode{name: id, var: Box::new(lhs), loc})
 }
 
+fn parse_store(tokens: &Vec<Token>, ix: &mut usize) -> AstNode {
+	let loc: Loc = tokens[*ix].loc.clone();
+	assert_n_eat(tokens, TokenKind::Store, ix);
+	let ptr: String = eat_iden(tokens, ix);
+	assert_n_eat(tokens, TokenKind::Comma, ix);
+	let op: AstNode = eat_operand(tokens, ix);
+	assert_n_eat(tokens, TokenKind::Eol, ix);
+	AstNode::Store(StoreAstNode{ptr: ptr, op: Box::new(op), loc: loc})
+}
+
 fn parse_ret(tokens: &Vec<Token>, ix: &mut usize) -> AstNode {
 	let loc: Loc = tokens[*ix].loc.clone();
 	assert_n_eat(tokens, TokenKind::Ret, ix);
@@ -230,11 +240,12 @@ fn build_ast_prec(tokens: &Vec<Token>, ix: &mut usize, prec: Precedence) -> Vec<
 			TokenKind::Ret => nodes.push(parse_ret(&tokens, ix)),
 			TokenKind::Param => nodes.push(parse_param(&tokens, ix)),
 			TokenKind::If => nodes.push(parse_if(&tokens, ix)),
+			TokenKind::Store => nodes.push(parse_store(&tokens, ix)),
 			TokenKind::Eol => {*ix += 1;},
 			_ => tokens[*ix].error_token_kind_mismatch(
 				vec![TokenKind::Function, TokenKind::Label, TokenKind::Goto,
 					 TokenKind::Iden(String::from("")), TokenKind::Ret,
-					 TokenKind::Param, TokenKind::If, TokenKind::Eol])
+					 TokenKind::Param, TokenKind::If, TokenKind::Store, TokenKind::Eol])
 		};
 	}
 	nodes
